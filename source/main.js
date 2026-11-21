@@ -18,9 +18,9 @@ document.getElementById('helpBtn').onclick=controls;document.getElementById('clo
 document.getElementById('cameraBtn').onclick=()=>setupCamera(camMode+1);document.getElementById('resetBtn').onclick=respawn;
 
 const qualityLevels=['low','medium','high'];
-const qualityLabels={low:'Baixa',medium:'Média',high:'Alta'};
+const qualityLabels={low:'Low',medium:'Medium',high:'High'};
 let currentQuality=localStorage.getItem('race_quality')||'medium';
-function updateQualityUI(){const lbl=document.getElementById('qualLabel');if(lbl)lbl.textContent=qualityLabels[currentQuality]||'Média';}
+function updateQualityUI(){const lbl=document.getElementById('qualLabel');if(lbl)lbl.textContent=qualityLabels[currentQuality]||'Medium';}
 function cycleQuality(){
   const nextIdx=(qualityLevels.indexOf(currentQuality)+1)%qualityLevels.length;
   currentQuality=qualityLevels[nextIdx];
@@ -212,55 +212,83 @@ function computeBioStep(dt){
   const diffAhead=Math.atan2(Math.sin(b1-b0),Math.cos(b1-b0)),curveAhead=Math.abs(diffAhead)/12;
   const CURVE_THRESHOLD=.0062;
   const inCurve=curveNow>CURVE_THRESHOLD,approaching=curveAhead>CURVE_THRESHOLD;
-  if(inCurve||approaching){
+  const isCurve=inCurve||approaching;
+  if(isCurve){
     bio.state='CONTRACT';
     const sign=inCurve?Math.sign(diffNow):Math.sign(diffAhead);
     bio.turnDirection=sign||1;bio.curveStrength=Math.max(curveNow,curveAhead);bio.turnDiff=inCurve?diffNow:diffAhead;
   }else{
     bio.state='RELAX';bio.turnDirection=0;bio.curveStrength=0;bio.turnDiff=0;
   }
-  let targetSpeed=26.0;
-  if(bio.state==='CONTRACT'){
-    if(bio.contractionLevel>=.35)targetSpeed=20.0;
-    else targetSpeed=12.0;
+  let targetSpeed=26.5;
+  if(isCurve){
+    if(bio.contractionLevel>=.35)targetSpeed=21.0;
+    else targetSpeed=13.0;
   }
   const speedDiff=targetSpeed-driver.speed;
   let autoGas=0,autoBrake=0;
-  if(speedDiff>.4)autoGas=Math.min(1.0,.36+speedDiff*.38);
-  else if(speedDiff<-1.8)autoBrake=Math.min(.85,-speedDiff*.32);
-  else autoGas=.22;
-  const aimDist=4.2+Math.abs(driver.speed)*.42;
-  atRoad(driver.s+aimDist,bioAim);
-  let targetOffset=0,handbrake=0,steerMult=1.0;
-  if(bio.state==='CONTRACT'){
-    if(bio.contractionLevel>=.35){
-      bio.drifting=true;
-      targetOffset=-bio.turnDirection*1.6;
-      if(Math.abs(driver.speed)>13&&inCurve){handbrake=.28;driver.slip=1;}
-      steerMult=1.06;
-    }else{
-      bio.drifting=false;targetOffset=bio.turnDirection*3.8;steerMult=.32;
-    }
-  }else{
-    bio.drifting=false;targetOffset=0;handbrake=0;steerMult=1.0;
-    if(bio.contractionLevel>.5)targetOffset=Math.sin(gameTime.elapsed*5.5)*.65;
+  if(speedDiff>.2)autoGas=Math.min(1.0,.40+speedDiff*.38);
+  else if(speedDiff<-1.5)autoBrake=Math.min(.85,-speedDiff*.32);
+  else autoGas=.25;
+  
+  let baseSteer=0;
+  if(!isCurve||bio.contractionLevel<.35){
+    baseSteer=isCurve?bio.turnDirection*.18:0;
   }
-  const targetX=bioAim[0]-bioAim[5]*targetOffset,targetZ=bioAim[2]+bioAim[3]*targetOffset;
-  const dx=targetX-driver.x,dz=targetZ-driver.z,ld=Math.hypot(dx,dz);
-  const alpha=Math.atan2(dx,-dz)-driver.head;
-  const maxSteer=.565/(1+Math.abs(driver.speed)*.051);
-  const baseSteer=limit(Math.atan(2*2.36*Math.sin(alpha)/Math.max(1,ld))/maxSteer,-1,1);
-  const manualNudge=(keys.KeyD-keys.KeyA)*.3;
-  const autoSteer=limit(baseSteer*steerMult+manualNudge,-1,1);
-  return {gas:autoGas,brk:autoBrake,steer:autoSteer,hand:handbrake};
+  return {gas:autoGas,brk:autoBrake,steer:baseSteer,isCurve};
 }
 
 function advance(gas,brk,steer,hand,dt){
+  let isCurve=false;
   if(!testMode){
     const ctrl=computeBioStep(dt);
-    gas=ctrl.gas;brk=ctrl.brk;steer=ctrl.steer;hand=ctrl.hand;
+    gas=ctrl.gas;brk=ctrl.brk;steer=ctrl.steer;hand=0;
+    isCurve=ctrl.isCurve;
   }
-  step(driver,gas,brk,steer,hand,dt);effects(dt);gameTime.elapsed+=dt;
+  step(driver,gas,brk,steer,hand,dt);
+  
+  if(!testMode){
+    // Rock-Solid Game Assist (No floppiness, pure precision apex lock)
+    if(isCurve&&bio.contractionLevel>=.35){
+      // Contracted in curve: rail-assisted drift along the inside apex
+      const targetOffset=-bio.turnDirection*1.35;
+      const offsetErr=targetOffset-driver.offset;
+      atRoad(driver.s,bioPt0);
+      const roadHead=Math.atan2(bioPt0[3],-bioPt0[5]);
+      const desiredTravel=roadHead+limit(offsetErr*.16,-.32,.32);
+      const tDiff=Math.atan2(Math.sin(desiredTravel-driver.travel),Math.cos(desiredTravel-driver.travel));
+      driver.travel+=tDiff*Math.min(1,dt*12);
+      
+      const desiredHead=driver.travel+bio.turnDirection*.22;
+      const hDiff=Math.atan2(Math.sin(desiredHead-driver.head),Math.cos(desiredHead-driver.head));
+      driver.head+=hDiff*Math.min(1,dt*10);
+      driver.yawRate=bio.turnDirection*.4;
+      driver.steering=-bio.turnDirection*.4;
+      driver.slip=1;
+      hasEffects=true;
+      bio.drifting=true;
+    }else if(!isCurve){
+      // Straight: Dead-center road tracking, critically damped, zero wobble
+      atRoad(driver.s,bioPt0);
+      const roadHead=Math.atan2(bioPt0[3],-bioPt0[5]);
+      const offsetErr=-driver.offset;
+      const desiredTravel=roadHead+limit(offsetErr*.20,-.25,.25);
+      const tDiff=Math.atan2(Math.sin(desiredTravel-driver.travel),Math.cos(desiredTravel-driver.travel));
+      driver.travel+=tDiff*Math.min(1,dt*14);
+      
+      const hDiff=Math.atan2(Math.sin(driver.travel-driver.head),Math.cos(driver.travel-driver.head));
+      driver.head+=hDiff*Math.min(1,dt*12);
+      driver.yawRate*=.8;
+      driver.steering*=.8;
+      driver.slip=0;
+      bio.drifting=false;
+    }else{
+      // Curve but NOT contracted: slides wide toward outer boundary
+      bio.drifting=false;
+    }
+  }
+  
+  effects(dt);gameTime.elapsed+=dt;
   if(gas||Math.abs(driver.speed)>.2)driving=true;
   if(driving)gameTime.lapTime+=dt;
   if(driver.distance>=nextGate){
@@ -277,12 +305,12 @@ function updateBioHUD(){
     bioText.textContent=arrow+'CONTRACT'+arrowRight;
     bioText.className='bio-text contract';
     bioBanner.className='bio-banner contract';
-    if(bioSub)bioSub.textContent=bio.contractionLevel>=.35?'Curva em drift · Contração ideal!':'Curva à frente · Contraia para derrapar!';
+    if(bioSub)bioSub.textContent=bio.contractionLevel>=.35?'Perfect Drift · Contraction Active':'Curve Ahead · Contract to Drift!';
   }else{
     bioText.textContent='RELAX';
     bioText.className='bio-text relax';
     bioBanner.className='bio-banner relax';
-    if(bioSub)bioSub.textContent=bio.contractionLevel>.4?'Reta livre · Relaxe seus músculos':'Piloto automático ativo · Relaxe na reta';
+    if(bioSub)bioSub.textContent=bio.contractionLevel>.4?'Straightaway Ahead · Relax Your Muscles':'Auto-Drive Active · Relax on Straight';
   }
   bioBar.style.width=(Math.max(0,Math.min(1,bio.contractionLevel))*100).toFixed(1)+'%';
 }
@@ -366,7 +394,7 @@ function replayStep(sample=-1){
 }
 function debugState(){return {x:driver.x,y:driver.y,z:driver.z,speed:driver.speed,steer:driver.steering,hand:keys.Space,slip:driver.slip,brake:driver.brake,offset:driver.offset,lap:lapNo,distance:driver.distance,firstCrossing,worstOffset,tireMargin,trackLength:TRACK_LENGTH,trackWidth:TRACK_WIDTH,camera:camMode,tapeIndex}}
 async function start(){
-  if(!navigator.gpu)throw Error('Este circuito requer WebGPU. Abra este arquivo no Chrome ou Edge com aceleração de gráficos.');
+  if(!navigator.gpu)throw Error('This game requires WebGPU. Please open it in Google Chrome or Microsoft Edge with graphics acceleration enabled.');
   updateQualityUI();
   const q=currentQuality;
   const qualityDims={low:{w:960,h:540},medium:{w:1280,h:720},high:{w:1920,h:1080}};

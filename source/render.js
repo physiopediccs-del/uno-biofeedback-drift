@@ -5,7 +5,7 @@ function packSceneVertices(source,count){
    const src=i*13,dst=i*12,packed=i*24+18;
    for(let j=0;j<9;j++)vertices[dst+j]=source[src+j];
    ids[packed]=source[src+9];ids[packed+1]=source[src+10];
-   if(ids[packed]!==source[src+9] || ids[packed+1]!==source[src+10])throw Error('Identificador de vértice fora do intervalo.');
+   if(ids[packed]!==source[src+9] || ids[packed+1]!==source[src+10])throw Error('Vertex identifier out of range.');
    vertices[dst+10]=source[src+11];vertices[dst+11]=source[src+12];
  }
  return vertices;
@@ -1234,10 +1234,10 @@ function rendererTiles(device){
 }
 function renderSunMatrix(out,o,x,y,z,extent,depth){const dx=RENDER_SUN[0],dy=RENDER_SUN[1],dz=RENDER_SUN[2];const rl=Math.sqrt(dz*dz+dx*dx),rx=dz/rl,rz=-dx/rl,ux=dy*rz,uy=dz*rx-dx*rz,uz=-dy*rx;out[o]=rx/extent;out[o+1]=ux/extent;out[o+2]=-dx/depth;out[o+3]=0;out[o+4]=0;out[o+5]=uy/extent;out[o+6]=-dy/depth;out[o+7]=0;out[o+8]=rz/extent;out[o+9]=uz/extent;out[o+10]=-dz/depth;out[o+11]=0;out[o+12]=-(rx*x+rz*z)/extent;out[o+13]=-(ux*x+uy*y+uz*z)/extent;out[o+14]=.5+(dx*x+dy*y+dz*z)/depth;out[o+15]=1;}
 async function initRenderer(canvas,scene){
- if(!navigator.gpu)throw Error('WebGPU indisponível neste navegador.');
+ if(!navigator.gpu)throw Error('WebGPU is not available in this browser.');
  const gq=window.graphicsQuality||localStorage.getItem('race_quality')||'medium';
  const wideShadowSize=gq==='low'?1024:gq==='high'?4096:2048;
- const nearShadowSize=gq==='low'?256:gq==='high'?768:512;const adapter=await navigator.gpu.requestAdapter({powerPreference:'high-performance'});if(!adapter)throw Error('Adaptador WebGPU indisponível.');const canTime=adapter.features.has('timestamp-query');const device=await adapter.requestDevice({requiredFeatures:canTime?['timestamp-query']:[]});device.addEventListener('uncapturederror',e=>console.error('WebGPU:',e.error.message));device.lost.then(i=>console.error('Dispositivo WebGPU perdido:',i.message));
+ const nearShadowSize=gq==='low'?256:gq==='high'?768:512;const adapter=await navigator.gpu.requestAdapter({powerPreference:'high-performance'});if(!adapter)throw Error('WebGPU adapter unavailable.');const canTime=adapter.features.has('timestamp-query');const device=await adapter.requestDevice({requiredFeatures:canTime?['timestamp-query']:[]});device.addEventListener('uncapturederror',e=>console.error('WebGPU:',e.error.message));device.lost.then(i=>console.error('WebGPU device lost:',i.message));
  const ctx=canvas.getContext('webgpu'),format=navigator.gpu.getPreferredCanvasFormat();ctx.configure({device,format,alphaMode:'opaque'});const queue=device.queue;
  const TU=GPUTextureUsage,BU=GPUBufferUsage, SS=GPUShaderStage;const W=canvas.width,H=canvas.height;
  const target=(size,fmt,ex=0)=>device.createTexture({size,format:fmt,usage:TU.RENDER_ATTACHMENT|TU.TEXTURE_BINDING|ex});const tex=(w,h,f)=>target([w,h],f).createView();const buffer=(arr,use)=>{const b=device.createBuffer({size:Math.max(4,arr.byteLength),usage:use,mappedAtCreation:true});new Float32Array(b.getMappedRange()).set(arr);b.unmap();return b};

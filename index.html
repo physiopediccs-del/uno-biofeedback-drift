@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<meta name="theme-color" content="#161b19"><title>Serra do Lume · Mille EP (Biofeedback Drift)</title>
+<meta name="theme-color" content="#161b19"><title>Serra do Lume · Uno EP (Biofeedback Drift)</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#171d1c;color:#fff;font-family:"Helvetica Neue",Arial,sans-serif}#view{display:block;width:100%;height:100%;object-fit:cover;outline:0}
 #hud{position:fixed;inset:0;pointer-events:none;filter:drop-shadow(0 1px 3px #12181266);--gold:#ffd471;--pad:clamp(20px,2.8vw,54px);--vpad:clamp(18px,3.5vh,48px);opacity:0;transition:none}
@@ -24,45 +24,45 @@ body.ready #hud{opacity:1}#hud::before{content:"";position:absolute;inset:0;back
 .bio-bar{height:100%;width:0%;background:linear-gradient(90deg,#7affc1,#ffd471);transition:width .05s ease-out}
 .bio-sub{margin-top:6px;font-size:9px;font-weight:650;letter-spacing:.14em;text-transform:uppercase;color:#d8e2df;text-shadow:0 1px 4px #000;white-space:nowrap}
 .controls{position:absolute;bottom:calc(var(--vpad) + 1px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:17px;white-space:nowrap;font-size:9px;letter-spacing:.05em;color:#fffc;text-shadow:0 1px 3px #1119}.controls button,#help button{appearance:none;background:none;border:0;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;padding:3px 0;cursor:pointer;pointer-events:auto;display:flex;align-items:center;gap:6px}.controls button:hover,.controls button:focus-visible{color:var(--gold)}kbd{font-family:inherit;font-weight:700;font-size:9px;display:inline-grid;place-items:center;border:1px solid #ffffff80;height:17px;min-width:17px;padding:0 3px;border-radius:3px;color:white}
-#help{position:absolute;bottom:calc(var(--vpad) + 38px);left:50%;transform:translateX(-50%);width:290px;padding:18px 20px;background:#121c1df0;border-top:2px solid var(--gold);pointer-events:auto;box-shadow:0 7px 24px #0003}#help[hidden]{display:none}#help header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.label{font-size:10px;color:var(--gold)}#help .row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:11px;color:#fff;line-height:18px}.row+.row{border-top:1px solid #ffffff16}#hint{position:absolute;left:50%;bottom:calc(var(--vpad) + 37px);transform:translateX(-50%);font-size:11px;font-weight:550;letter-spacing:.03em;color:white;text-shadow:0 1px 6px #000}#hint kbd{margin-right:4px;color:var(--gold);border-color:#ffd471ad}#help:not([hidden])~#hint{display:none}
+#help{position:absolute;bottom:calc(var(--vpad) + 38px);left:50%;transform:translateX(-50%);width:300px;padding:18px 20px;background:#121c1df0;border-top:2px solid var(--gold);pointer-events:auto;box-shadow:0 7px 24px #0003}#help[hidden]{display:none}#help header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.label{font-size:10px;color:var(--gold)}#help .row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:11px;color:#fff;line-height:18px}.row+.row{border-top:1px solid #ffffff16}#hint{position:absolute;left:50%;bottom:calc(var(--vpad) + 37px);transform:translateX(-50%);font-size:11px;font-weight:550;letter-spacing:.03em;color:white;text-shadow:0 1px 6px #000}#hint kbd{margin-right:4px;color:var(--gold);border-color:#ffd471ad}#help:not([hidden])~#hint{display:none}
 #load{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 30% 70%,#35433f,#141c1d 70%);color:#f6f4ec;text-align:center}.load-title{font-size:38px;font-style:italic;letter-spacing:-.07em;font-weight:750;margin:10px 0 22px}.sub{font-size:10px;color:#dfcfb0;letter-spacing:.12em;max-width:420px;line-height:1.6}.loader{height:2px;max-width:144px;margin:16px auto 0;background:#f5d27525;overflow:hidden}.loader:after{content:"";display:block;width:40%;height:100%;background:#ffd471;animation:load 1.1s infinite ease-in-out}@keyframes load{from{transform:translateX(-100%)}to{transform:translateX(350%)}}body.ready #load{display:none}
 @media(max-width:760px){.controls{gap:10px;bottom:12px}#vehicle,#dash{bottom:42px}#map{bottom:92px}#hint{bottom:40px}#bioPrompt{top:12px}.symbol{width:32px}.eyebrow{font-size:8px}.name{font-size:17px}#clock{gap:9px;padding:8px}#chrono{width:82px;height:18px}}
 @media(min-width:1900px){.symbol{width:56px;height:52px}.name{font-size:34px}.eyebrow{font-size:12px}.field{font-size:11px}.lap{font-size:26px}#chrono{width:142px;height:30px}.controls{font-size:12px;gap:24px}kbd{height:23px;min-width:23px;font-size:12px}.vehicle{font-size:24px}.carline{font-size:11px}#hint{font-size:15px;bottom:calc(var(--vpad) + 48px)}}
 </style>
 </head>
 <body>
-<canvas id="view" tabindex="0" aria-label="Circuito Serra do Lume, jogo de corrida 3D"></canvas>
+<canvas id="view" tabindex="0" aria-label="Serra do Lume Raceway, 3D WebGPU Racing Game"></canvas>
 <div id="hud">
-<div id="brand"><svg class="symbol" viewBox="0 0 48 40" aria-hidden="true"><path d="M2 32 19 5h9L11 32ZM18 32 34 7l5 8-11 17Z" fill="#ffd471"/><path d="m33 32 9-14 5 8-4 6Z" fill="#fff"/></svg><div><div class="eyebrow">Autódromo</div><div class="name">SERRA DO LUME</div></div></div>
+<div id="brand"><svg class="symbol" viewBox="0 0 48 40" aria-hidden="true"><path d="M2 32 19 5h9L11 32ZM18 32 34 7l5 8-11 17Z" fill="#ffd471"/><path d="m33 32 9-14 5 8-4 6Z" fill="#fff"/></svg><div><div class="eyebrow">Raceway</div><div class="name">SERRA DO LUME</div></div></div>
 <div id="bioPrompt">
   <div id="bioBanner" class="bio-banner relax">
     <div id="bioText" class="bio-text relax">RELAX</div>
     <div class="bio-meter"><div id="bioBar" class="bio-bar"></div></div>
   </div>
-  <div id="bioSub" class="bio-sub">Piloto automático · Relaxe na reta</div>
+  <div id="bioSub" class="bio-sub">Auto-Drive Active · Relax on Straight</div>
 </div>
-<div id="clock"><div><div class="field">Volta</div><div id="lap" class="lap">01</div></div><div class="divider"></div><div><div class="field">Tempo da volta</div><canvas id="chrono"></canvas></div></div>
-<canvas id="map" width="540" height="324" aria-label="Mapa do circuito"></canvas>
+<div id="clock"><div><div class="field">Lap</div><div id="lap" class="lap">01</div></div><div class="divider"></div><div><div class="field">Lap Time</div><canvas id="chrono"></canvas></div></div>
+<canvas id="map" width="540" height="324" aria-label="Circuit track map"></canvas>
 <div id="vehicle"><div class="carline">Fiat &nbsp;/&nbsp; 1996</div><div class="vehicle">Uno Mille EP</div></div>
-<canvas id="dash" width="540" height="250" aria-label="Velocímetro, conta-giros e marcha"></canvas>
+<canvas id="dash" width="540" height="250" aria-label="Speedometer, tachometer and gear"></canvas>
 <div class="controls">
-  <button id="qualBtn"><kbd>Q</kbd> <span id="qualLabel">Média</span></button>
-  <button id="helpBtn" aria-expanded="false"><kbd>H</kbd> Controles</button>
-  <button id="cameraBtn"><kbd>C</kbd> Câmera</button>
-  <button id="resetBtn"><kbd>R</kbd> Reposicionar</button>
+  <button id="qualBtn"><kbd>Q</kbd> <span id="qualLabel">Medium</span></button>
+  <button id="helpBtn" aria-expanded="false"><kbd>H</kbd> Controls</button>
+  <button id="cameraBtn"><kbd>C</kbd> Camera</button>
+  <button id="resetBtn"><kbd>R</kbd> Reset</button>
 </div>
 <section id="help" hidden>
-  <header><span class="label">Controles e Biofeedback</span><button id="closeHelp" aria-label="Fechar controles">✕</button></header>
-  <div class="row">Piloto automático <span>Direção contínua</span></div>
-  <div class="row">Contrair (Drift guiado) <span><kbd>Espaço</kbd> ou Clique</span></div>
-  <div class="row">Relaxar nas retas <span>Soltar comando</span></div>
-  <div class="row">Qualidade gráfica <span><kbd>Q</kbd></span></div>
-  <div class="row">Trocar câmera <span><kbd>C</kbd></span></div>
-  <div class="row">Voltar à pista <span><kbd>R</kbd></span></div>
+  <header><span class="label">Controls & Biofeedback</span><button id="closeHelp" aria-label="Close controls">✕</button></header>
+  <div class="row">Auto-Drive <span>Continuous guidance</span></div>
+  <div class="row">Contract (Guided Drift) <span><kbd>Space</kbd> or Hold Click</span></div>
+  <div class="row">Relax on Straights <span>Release input</span></div>
+  <div class="row">Graphics Quality <span><kbd>Q</kbd></span></div>
+  <div class="row">Switch Camera <span><kbd>C</kbd></span></div>
+  <div class="row">Reset to Track <span><kbd>R</kbd></span></div>
 </section>
-<div id="hint"><kbd>Espaço</kbd> ou Clique para Contrair</div>
+<div id="hint"><kbd>Space</kbd> or Hold Click to Contract</div>
 </div>
-<div id="load"><div><div class="eyebrow">Autódromo</div><div class="load-title">Serra do Lume</div><div class="sub" id="status">Preparando o circuito</div><div class="loader"></div></div></div>
+<div id="load"><div><div class="eyebrow">Circuit</div><div class="load-title">Serra do Lume</div><div class="sub" id="status">Preparing circuit</div><div class="loader"></div></div></div>
 <script>
 // Interleaved geometry is assembled once. Templates share a vertex range on the GPU.
 const G = (() => {
@@ -5807,7 +5807,7 @@ function packSceneVertices(source,count){
    const src=i*13,dst=i*12,packed=i*24+18;
    for(let j=0;j<9;j++)vertices[dst+j]=source[src+j];
    ids[packed]=source[src+9];ids[packed+1]=source[src+10];
-   if(ids[packed]!==source[src+9] || ids[packed+1]!==source[src+10])throw Error('Identificador de vértice fora do intervalo.');
+   if(ids[packed]!==source[src+9] || ids[packed+1]!==source[src+10])throw Error('Vertex identifier out of range.');
    vertices[dst+10]=source[src+11];vertices[dst+11]=source[src+12];
  }
  return vertices;
@@ -7036,10 +7036,10 @@ function rendererTiles(device){
 }
 function renderSunMatrix(out,o,x,y,z,extent,depth){const dx=RENDER_SUN[0],dy=RENDER_SUN[1],dz=RENDER_SUN[2];const rl=Math.sqrt(dz*dz+dx*dx),rx=dz/rl,rz=-dx/rl,ux=dy*rz,uy=dz*rx-dx*rz,uz=-dy*rx;out[o]=rx/extent;out[o+1]=ux/extent;out[o+2]=-dx/depth;out[o+3]=0;out[o+4]=0;out[o+5]=uy/extent;out[o+6]=-dy/depth;out[o+7]=0;out[o+8]=rz/extent;out[o+9]=uz/extent;out[o+10]=-dz/depth;out[o+11]=0;out[o+12]=-(rx*x+rz*z)/extent;out[o+13]=-(ux*x+uy*y+uz*z)/extent;out[o+14]=.5+(dx*x+dy*y+dz*z)/depth;out[o+15]=1;}
 async function initRenderer(canvas,scene){
- if(!navigator.gpu)throw Error('WebGPU indisponível neste navegador.');
+ if(!navigator.gpu)throw Error('WebGPU is not available in this browser.');
  const gq=window.graphicsQuality||localStorage.getItem('race_quality')||'medium';
  const wideShadowSize=gq==='low'?1024:gq==='high'?4096:2048;
- const nearShadowSize=gq==='low'?256:gq==='high'?768:512;const adapter=await navigator.gpu.requestAdapter({powerPreference:'high-performance'});if(!adapter)throw Error('Adaptador WebGPU indisponível.');const canTime=adapter.features.has('timestamp-query');const device=await adapter.requestDevice({requiredFeatures:canTime?['timestamp-query']:[]});device.addEventListener('uncapturederror',e=>console.error('WebGPU:',e.error.message));device.lost.then(i=>console.error('Dispositivo WebGPU perdido:',i.message));
+ const nearShadowSize=gq==='low'?256:gq==='high'?768:512;const adapter=await navigator.gpu.requestAdapter({powerPreference:'high-performance'});if(!adapter)throw Error('WebGPU adapter unavailable.');const canTime=adapter.features.has('timestamp-query');const device=await adapter.requestDevice({requiredFeatures:canTime?['timestamp-query']:[]});device.addEventListener('uncapturederror',e=>console.error('WebGPU:',e.error.message));device.lost.then(i=>console.error('WebGPU device lost:',i.message));
  const ctx=canvas.getContext('webgpu'),format=navigator.gpu.getPreferredCanvasFormat();ctx.configure({device,format,alphaMode:'opaque'});const queue=device.queue;
  const TU=GPUTextureUsage,BU=GPUBufferUsage, SS=GPUShaderStage;const W=canvas.width,H=canvas.height;
  const target=(size,fmt,ex=0)=>device.createTexture({size,format:fmt,usage:TU.RENDER_ATTACHMENT|TU.TEXTURE_BINDING|ex});const tex=(w,h,f)=>target([w,h],f).createView();const buffer=(arr,use)=>{const b=device.createBuffer({size:Math.max(4,arr.byteLength),usage:use,mappedAtCreation:true});new Float32Array(b.getMappedRange()).set(arr);b.unmap();return b};
@@ -7382,9 +7382,9 @@ document.getElementById('helpBtn').onclick=controls;document.getElementById('clo
 document.getElementById('cameraBtn').onclick=()=>setupCamera(camMode+1);document.getElementById('resetBtn').onclick=respawn;
 
 const qualityLevels=['low','medium','high'];
-const qualityLabels={low:'Baixa',medium:'Média',high:'Alta'};
+const qualityLabels={low:'Low',medium:'Medium',high:'High'};
 let currentQuality=localStorage.getItem('race_quality')||'medium';
-function updateQualityUI(){const lbl=document.getElementById('qualLabel');if(lbl)lbl.textContent=qualityLabels[currentQuality]||'Média';}
+function updateQualityUI(){const lbl=document.getElementById('qualLabel');if(lbl)lbl.textContent=qualityLabels[currentQuality]||'Medium';}
 function cycleQuality(){
   const nextIdx=(qualityLevels.indexOf(currentQuality)+1)%qualityLevels.length;
   currentQuality=qualityLevels[nextIdx];
@@ -7576,55 +7576,83 @@ function computeBioStep(dt){
   const diffAhead=Math.atan2(Math.sin(b1-b0),Math.cos(b1-b0)),curveAhead=Math.abs(diffAhead)/12;
   const CURVE_THRESHOLD=.0062;
   const inCurve=curveNow>CURVE_THRESHOLD,approaching=curveAhead>CURVE_THRESHOLD;
-  if(inCurve||approaching){
+  const isCurve=inCurve||approaching;
+  if(isCurve){
     bio.state='CONTRACT';
     const sign=inCurve?Math.sign(diffNow):Math.sign(diffAhead);
     bio.turnDirection=sign||1;bio.curveStrength=Math.max(curveNow,curveAhead);bio.turnDiff=inCurve?diffNow:diffAhead;
   }else{
     bio.state='RELAX';bio.turnDirection=0;bio.curveStrength=0;bio.turnDiff=0;
   }
-  let targetSpeed=26.0;
-  if(bio.state==='CONTRACT'){
-    if(bio.contractionLevel>=.35)targetSpeed=20.0;
-    else targetSpeed=12.0;
+  let targetSpeed=26.5;
+  if(isCurve){
+    if(bio.contractionLevel>=.35)targetSpeed=21.0;
+    else targetSpeed=13.0;
   }
   const speedDiff=targetSpeed-driver.speed;
   let autoGas=0,autoBrake=0;
-  if(speedDiff>.4)autoGas=Math.min(1.0,.36+speedDiff*.38);
-  else if(speedDiff<-1.8)autoBrake=Math.min(.85,-speedDiff*.32);
-  else autoGas=.22;
-  const aimDist=4.2+Math.abs(driver.speed)*.42;
-  atRoad(driver.s+aimDist,bioAim);
-  let targetOffset=0,handbrake=0,steerMult=1.0;
-  if(bio.state==='CONTRACT'){
-    if(bio.contractionLevel>=.35){
-      bio.drifting=true;
-      targetOffset=-bio.turnDirection*1.6;
-      if(Math.abs(driver.speed)>13&&inCurve){handbrake=.28;driver.slip=1;}
-      steerMult=1.06;
-    }else{
-      bio.drifting=false;targetOffset=bio.turnDirection*3.8;steerMult=.32;
-    }
-  }else{
-    bio.drifting=false;targetOffset=0;handbrake=0;steerMult=1.0;
-    if(bio.contractionLevel>.5)targetOffset=Math.sin(gameTime.elapsed*5.5)*.65;
+  if(speedDiff>.2)autoGas=Math.min(1.0,.40+speedDiff*.38);
+  else if(speedDiff<-1.5)autoBrake=Math.min(.85,-speedDiff*.32);
+  else autoGas=.25;
+  
+  let baseSteer=0;
+  if(!isCurve||bio.contractionLevel<.35){
+    baseSteer=isCurve?bio.turnDirection*.18:0;
   }
-  const targetX=bioAim[0]-bioAim[5]*targetOffset,targetZ=bioAim[2]+bioAim[3]*targetOffset;
-  const dx=targetX-driver.x,dz=targetZ-driver.z,ld=Math.hypot(dx,dz);
-  const alpha=Math.atan2(dx,-dz)-driver.head;
-  const maxSteer=.565/(1+Math.abs(driver.speed)*.051);
-  const baseSteer=limit(Math.atan(2*2.36*Math.sin(alpha)/Math.max(1,ld))/maxSteer,-1,1);
-  const manualNudge=(keys.KeyD-keys.KeyA)*.3;
-  const autoSteer=limit(baseSteer*steerMult+manualNudge,-1,1);
-  return {gas:autoGas,brk:autoBrake,steer:autoSteer,hand:handbrake};
+  return {gas:autoGas,brk:autoBrake,steer:baseSteer,isCurve};
 }
 
 function advance(gas,brk,steer,hand,dt){
+  let isCurve=false;
   if(!testMode){
     const ctrl=computeBioStep(dt);
-    gas=ctrl.gas;brk=ctrl.brk;steer=ctrl.steer;hand=ctrl.hand;
+    gas=ctrl.gas;brk=ctrl.brk;steer=ctrl.steer;hand=0;
+    isCurve=ctrl.isCurve;
   }
-  step(driver,gas,brk,steer,hand,dt);effects(dt);gameTime.elapsed+=dt;
+  step(driver,gas,brk,steer,hand,dt);
+  
+  if(!testMode){
+    // Rock-Solid Game Assist (No floppiness, pure precision apex lock)
+    if(isCurve&&bio.contractionLevel>=.35){
+      // Contracted in curve: rail-assisted drift along the inside apex
+      const targetOffset=-bio.turnDirection*1.35;
+      const offsetErr=targetOffset-driver.offset;
+      atRoad(driver.s,bioPt0);
+      const roadHead=Math.atan2(bioPt0[3],-bioPt0[5]);
+      const desiredTravel=roadHead+limit(offsetErr*.16,-.32,.32);
+      const tDiff=Math.atan2(Math.sin(desiredTravel-driver.travel),Math.cos(desiredTravel-driver.travel));
+      driver.travel+=tDiff*Math.min(1,dt*12);
+      
+      const desiredHead=driver.travel+bio.turnDirection*.22;
+      const hDiff=Math.atan2(Math.sin(desiredHead-driver.head),Math.cos(desiredHead-driver.head));
+      driver.head+=hDiff*Math.min(1,dt*10);
+      driver.yawRate=bio.turnDirection*.4;
+      driver.steering=-bio.turnDirection*.4;
+      driver.slip=1;
+      hasEffects=true;
+      bio.drifting=true;
+    }else if(!isCurve){
+      // Straight: Dead-center road tracking, critically damped, zero wobble
+      atRoad(driver.s,bioPt0);
+      const roadHead=Math.atan2(bioPt0[3],-bioPt0[5]);
+      const offsetErr=-driver.offset;
+      const desiredTravel=roadHead+limit(offsetErr*.20,-.25,.25);
+      const tDiff=Math.atan2(Math.sin(desiredTravel-driver.travel),Math.cos(desiredTravel-driver.travel));
+      driver.travel+=tDiff*Math.min(1,dt*14);
+      
+      const hDiff=Math.atan2(Math.sin(driver.travel-driver.head),Math.cos(driver.travel-driver.head));
+      driver.head+=hDiff*Math.min(1,dt*12);
+      driver.yawRate*=.8;
+      driver.steering*=.8;
+      driver.slip=0;
+      bio.drifting=false;
+    }else{
+      // Curve but NOT contracted: slides wide toward outer boundary
+      bio.drifting=false;
+    }
+  }
+  
+  effects(dt);gameTime.elapsed+=dt;
   if(gas||Math.abs(driver.speed)>.2)driving=true;
   if(driving)gameTime.lapTime+=dt;
   if(driver.distance>=nextGate){
@@ -7641,12 +7669,12 @@ function updateBioHUD(){
     bioText.textContent=arrow+'CONTRACT'+arrowRight;
     bioText.className='bio-text contract';
     bioBanner.className='bio-banner contract';
-    if(bioSub)bioSub.textContent=bio.contractionLevel>=.35?'Curva em drift · Contração ideal!':'Curva à frente · Contraia para derrapar!';
+    if(bioSub)bioSub.textContent=bio.contractionLevel>=.35?'Perfect Drift · Contraction Active':'Curve Ahead · Contract to Drift!';
   }else{
     bioText.textContent='RELAX';
     bioText.className='bio-text relax';
     bioBanner.className='bio-banner relax';
-    if(bioSub)bioSub.textContent=bio.contractionLevel>.4?'Reta livre · Relaxe seus músculos':'Piloto automático ativo · Relaxe na reta';
+    if(bioSub)bioSub.textContent=bio.contractionLevel>.4?'Straightaway Ahead · Relax Your Muscles':'Auto-Drive Active · Relax on Straight';
   }
   bioBar.style.width=(Math.max(0,Math.min(1,bio.contractionLevel))*100).toFixed(1)+'%';
 }
@@ -7730,7 +7758,7 @@ function replayStep(sample=-1){
 }
 function debugState(){return {x:driver.x,y:driver.y,z:driver.z,speed:driver.speed,steer:driver.steering,hand:keys.Space,slip:driver.slip,brake:driver.brake,offset:driver.offset,lap:lapNo,distance:driver.distance,firstCrossing,worstOffset,tireMargin,trackLength:TRACK_LENGTH,trackWidth:TRACK_WIDTH,camera:camMode,tapeIndex}}
 async function start(){
-  if(!navigator.gpu)throw Error('Este circuito requer WebGPU. Abra este arquivo no Chrome ou Edge com aceleração de gráficos.');
+  if(!navigator.gpu)throw Error('This game requires WebGPU. Please open it in Google Chrome or Microsoft Edge with graphics acceleration enabled.');
   updateQualityUI();
   const q=currentQuality;
   const qualityDims={low:{w:960,h:540},medium:{w:1280,h:720},high:{w:1920,h:1080}};

@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<meta name="theme-color" content="#161b19"><title>Serra do Lume · Mille EP (Biofeedback Drift)</title>
+<meta name="theme-color" content="#161b19"><title>Serra do Lume · Uno EP (Biofeedback Drift)</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#171d1c;color:#fff;font-family:"Helvetica Neue",Arial,sans-serif}#view{display:block;width:100%;height:100%;object-fit:cover;outline:0}
 #hud{position:fixed;inset:0;pointer-events:none;filter:drop-shadow(0 1px 3px #12181266);--gold:#ffd471;--pad:clamp(20px,2.8vw,54px);--vpad:clamp(18px,3.5vh,48px);opacity:0;transition:none}
@@ -24,45 +24,45 @@ body.ready #hud{opacity:1}#hud::before{content:"";position:absolute;inset:0;back
 .bio-bar{height:100%;width:0%;background:linear-gradient(90deg,#7affc1,#ffd471);transition:width .05s ease-out}
 .bio-sub{margin-top:6px;font-size:9px;font-weight:650;letter-spacing:.14em;text-transform:uppercase;color:#d8e2df;text-shadow:0 1px 4px #000;white-space:nowrap}
 .controls{position:absolute;bottom:calc(var(--vpad) + 1px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:17px;white-space:nowrap;font-size:9px;letter-spacing:.05em;color:#fffc;text-shadow:0 1px 3px #1119}.controls button,#help button{appearance:none;background:none;border:0;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;padding:3px 0;cursor:pointer;pointer-events:auto;display:flex;align-items:center;gap:6px}.controls button:hover,.controls button:focus-visible{color:var(--gold)}kbd{font-family:inherit;font-weight:700;font-size:9px;display:inline-grid;place-items:center;border:1px solid #ffffff80;height:17px;min-width:17px;padding:0 3px;border-radius:3px;color:white}
-#help{position:absolute;bottom:calc(var(--vpad) + 38px);left:50%;transform:translateX(-50%);width:290px;padding:18px 20px;background:#121c1df0;border-top:2px solid var(--gold);pointer-events:auto;box-shadow:0 7px 24px #0003}#help[hidden]{display:none}#help header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.label{font-size:10px;color:var(--gold)}#help .row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:11px;color:#fff;line-height:18px}.row+.row{border-top:1px solid #ffffff16}#hint{position:absolute;left:50%;bottom:calc(var(--vpad) + 37px);transform:translateX(-50%);font-size:11px;font-weight:550;letter-spacing:.03em;color:white;text-shadow:0 1px 6px #000}#hint kbd{margin-right:4px;color:var(--gold);border-color:#ffd471ad}#help:not([hidden])~#hint{display:none}
+#help{position:absolute;bottom:calc(var(--vpad) + 38px);left:50%;transform:translateX(-50%);width:300px;padding:18px 20px;background:#121c1df0;border-top:2px solid var(--gold);pointer-events:auto;box-shadow:0 7px 24px #0003}#help[hidden]{display:none}#help header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.label{font-size:10px;color:var(--gold)}#help .row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:11px;color:#fff;line-height:18px}.row+.row{border-top:1px solid #ffffff16}#hint{position:absolute;left:50%;bottom:calc(var(--vpad) + 37px);transform:translateX(-50%);font-size:11px;font-weight:550;letter-spacing:.03em;color:white;text-shadow:0 1px 6px #000}#hint kbd{margin-right:4px;color:var(--gold);border-color:#ffd471ad}#help:not([hidden])~#hint{display:none}
 #load{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 30% 70%,#35433f,#141c1d 70%);color:#f6f4ec;text-align:center}.load-title{font-size:38px;font-style:italic;letter-spacing:-.07em;font-weight:750;margin:10px 0 22px}.sub{font-size:10px;color:#dfcfb0;letter-spacing:.12em;max-width:420px;line-height:1.6}.loader{height:2px;max-width:144px;margin:16px auto 0;background:#f5d27525;overflow:hidden}.loader:after{content:"";display:block;width:40%;height:100%;background:#ffd471;animation:load 1.1s infinite ease-in-out}@keyframes load{from{transform:translateX(-100%)}to{transform:translateX(350%)}}body.ready #load{display:none}
 @media(max-width:760px){.controls{gap:10px;bottom:12px}#vehicle,#dash{bottom:42px}#map{bottom:92px}#hint{bottom:40px}#bioPrompt{top:12px}.symbol{width:32px}.eyebrow{font-size:8px}.name{font-size:17px}#clock{gap:9px;padding:8px}#chrono{width:82px;height:18px}}
 @media(min-width:1900px){.symbol{width:56px;height:52px}.name{font-size:34px}.eyebrow{font-size:12px}.field{font-size:11px}.lap{font-size:26px}#chrono{width:142px;height:30px}.controls{font-size:12px;gap:24px}kbd{height:23px;min-width:23px;font-size:12px}.vehicle{font-size:24px}.carline{font-size:11px}#hint{font-size:15px;bottom:calc(var(--vpad) + 48px)}}
 </style>
 </head>
 <body>
-<canvas id="view" tabindex="0" aria-label="Circuito Serra do Lume, jogo de corrida 3D"></canvas>
+<canvas id="view" tabindex="0" aria-label="Serra do Lume Raceway, 3D WebGPU Racing Game"></canvas>
 <div id="hud">
-<div id="brand"><svg class="symbol" viewBox="0 0 48 40" aria-hidden="true"><path d="M2 32 19 5h9L11 32ZM18 32 34 7l5 8-11 17Z" fill="#ffd471"/><path d="m33 32 9-14 5 8-4 6Z" fill="#fff"/></svg><div><div class="eyebrow">Autódromo</div><div class="name">SERRA DO LUME</div></div></div>
+<div id="brand"><svg class="symbol" viewBox="0 0 48 40" aria-hidden="true"><path d="M2 32 19 5h9L11 32ZM18 32 34 7l5 8-11 17Z" fill="#ffd471"/><path d="m33 32 9-14 5 8-4 6Z" fill="#fff"/></svg><div><div class="eyebrow">Raceway</div><div class="name">SERRA DO LUME</div></div></div>
 <div id="bioPrompt">
   <div id="bioBanner" class="bio-banner relax">
     <div id="bioText" class="bio-text relax">RELAX</div>
     <div class="bio-meter"><div id="bioBar" class="bio-bar"></div></div>
   </div>
-  <div id="bioSub" class="bio-sub">Piloto automático · Relaxe na reta</div>
+  <div id="bioSub" class="bio-sub">Auto-Drive Active · Relax on Straight</div>
 </div>
-<div id="clock"><div><div class="field">Volta</div><div id="lap" class="lap">01</div></div><div class="divider"></div><div><div class="field">Tempo da volta</div><canvas id="chrono"></canvas></div></div>
-<canvas id="map" width="540" height="324" aria-label="Mapa do circuito"></canvas>
+<div id="clock"><div><div class="field">Lap</div><div id="lap" class="lap">01</div></div><div class="divider"></div><div><div class="field">Lap Time</div><canvas id="chrono"></canvas></div></div>
+<canvas id="map" width="540" height="324" aria-label="Circuit track map"></canvas>
 <div id="vehicle"><div class="carline">Fiat &nbsp;/&nbsp; 1996</div><div class="vehicle">Uno Mille EP</div></div>
-<canvas id="dash" width="540" height="250" aria-label="Velocímetro, conta-giros e marcha"></canvas>
+<canvas id="dash" width="540" height="250" aria-label="Speedometer, tachometer and gear"></canvas>
 <div class="controls">
-  <button id="qualBtn"><kbd>Q</kbd> <span id="qualLabel">Média</span></button>
-  <button id="helpBtn" aria-expanded="false"><kbd>H</kbd> Controles</button>
-  <button id="cameraBtn"><kbd>C</kbd> Câmera</button>
-  <button id="resetBtn"><kbd>R</kbd> Reposicionar</button>
+  <button id="qualBtn"><kbd>Q</kbd> <span id="qualLabel">Medium</span></button>
+  <button id="helpBtn" aria-expanded="false"><kbd>H</kbd> Controls</button>
+  <button id="cameraBtn"><kbd>C</kbd> Camera</button>
+  <button id="resetBtn"><kbd>R</kbd> Reset</button>
 </div>
 <section id="help" hidden>
-  <header><span class="label">Controles e Biofeedback</span><button id="closeHelp" aria-label="Fechar controles">✕</button></header>
-  <div class="row">Piloto automático <span>Direção contínua</span></div>
-  <div class="row">Contrair (Drift guiado) <span><kbd>Espaço</kbd> ou Clique</span></div>
-  <div class="row">Relaxar nas retas <span>Soltar comando</span></div>
-  <div class="row">Qualidade gráfica <span><kbd>Q</kbd></span></div>
-  <div class="row">Trocar câmera <span><kbd>C</kbd></span></div>
-  <div class="row">Voltar à pista <span><kbd>R</kbd></span></div>
+  <header><span class="label">Controls & Biofeedback</span><button id="closeHelp" aria-label="Close controls">✕</button></header>
+  <div class="row">Auto-Drive <span>Continuous guidance</span></div>
+  <div class="row">Contract (Guided Drift) <span><kbd>Space</kbd> or Hold Click</span></div>
+  <div class="row">Relax on Straights <span>Release input</span></div>
+  <div class="row">Graphics Quality <span><kbd>Q</kbd></span></div>
+  <div class="row">Switch Camera <span><kbd>C</kbd></span></div>
+  <div class="row">Reset to Track <span><kbd>R</kbd></span></div>
 </section>
-<div id="hint"><kbd>Espaço</kbd> ou Clique para Contrair</div>
+<div id="hint"><kbd>Space</kbd> or Hold Click to Contract</div>
 </div>
-<div id="load"><div><div class="eyebrow">Autódromo</div><div class="load-title">Serra do Lume</div><div class="sub" id="status">Preparando o circuito</div><div class="loader"></div></div></div>
+<div id="load"><div><div class="eyebrow">Circuit</div><div class="load-title">Serra do Lume</div><div class="sub" id="status">Preparing circuit</div><div class="loader"></div></div></div>
 <script>
 /*__GAME__*/
 </script></body></html>
