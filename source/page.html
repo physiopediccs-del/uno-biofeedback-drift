@@ -13,16 +13,37 @@ body.ready #hud{opacity:1}#hud::before{content:"";position:absolute;inset:0;back
 #vehicle{position:absolute;bottom:var(--vpad);left:var(--pad);border-left:2px solid var(--gold);padding-left:11px}.carline{color:#fff;font-size:8px;letter-spacing:.19em;margin-bottom:4px}.vehicle{font-weight:620;letter-spacing:-.02em;font-size:17px}
 #dash{position:absolute;bottom:calc(var(--vpad) - 4px);right:var(--pad);width:clamp(158px,15.5vw,277px);height:auto}
 #bioPrompt{position:absolute;top:var(--vpad);left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:5}
-.bio-banner{min-width:180px;padding:7px 26px 9px;background:rgba(18,28,29,0.85);border:1.5px solid rgba(255,255,255,0.22);box-shadow:0 6px 24px rgba(0,0,0,0.45);border-radius:4px;text-align:center;position:relative;overflow:hidden;backdrop-filter:blur(6px);transition:border-color .2s,box-shadow .2s}
-.bio-banner.relax{border-color:#52e39688;box-shadow:0 6px 24px rgba(0,0,0,0.45),0 0 16px rgba(82,227,150,0.2)}
-.bio-banner.contract{border-color:#ffd471;box-shadow:0 6px 24px rgba(0,0,0,0.45),0 0 22px rgba(255,212,113,0.4);animation:bio-pulse .7s infinite alternate ease-in-out}
-@keyframes bio-pulse{from{transform:scale(1)}to{transform:scale(1.03)}}
-.bio-text{font-size:clamp(19px,1.75vw,27px);font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-style:italic;line-height:1}
-.bio-text.relax{color:#7affc1;text-shadow:0 0 10px rgba(122,255,193,0.5)}
-.bio-text.contract{color:#ffd471;text-shadow:0 0 12px rgba(255,212,113,0.6)}
+.bio-banner{min-width:220px;padding:8px 22px 10px;background:rgba(18,28,29,0.88);border:1.5px solid rgba(255,255,255,0.22);box-shadow:0 6px 24px rgba(0,0,0,0.45);border-radius:4px;text-align:center;position:relative;overflow:hidden;backdrop-filter:blur(6px);transition:border-color .2s,box-shadow .2s}
+.bio-header{display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:5px;gap:8px}
+.bio-badge{font-size:9px;font-weight:800;letter-spacing:.14em;padding:2px 7px;border-radius:2px;text-transform:uppercase;line-height:1}
+.bio-badge.work{background:#ffd471;color:#141c1d}
+.bio-badge.rest{background:#7affc1;color:#0f2019}
+.bio-badge.complete{background:#9bb5ff;color:#0b1329}
+.bio-rep{font-size:10px;font-weight:700;letter-spacing:.10em;color:#e1ece8;font-variant-numeric:tabular-nums;line-height:1}
+.bio-banner.rest{border-color:#52e39688;box-shadow:0 6px 24px rgba(0,0,0,0.45),0 0 16px rgba(82,227,150,0.2)}
+.bio-banner.work{border-color:#ffd471;box-shadow:0 6px 24px rgba(0,0,0,0.45),0 0 22px rgba(255,212,113,0.4);animation:bio-pulse .7s infinite alternate ease-in-out}
+.bio-banner.complete{border-color:#9bb5ff;box-shadow:0 6px 24px rgba(0,0,0,0.45),0 0 20px rgba(155,181,255,0.35)}
+@keyframes bio-pulse{from{transform:scale(1)}to{transform:scale(1.025)}}
+.bio-text{font-size:clamp(18px,1.65vw,25px);font-weight:800;letter-spacing:.10em;text-transform:uppercase;font-style:italic;line-height:1.1}
+.bio-text.rest{color:#7affc1;text-shadow:0 0 10px rgba(122,255,193,0.5)}
+.bio-text.work{color:#ffd471;text-shadow:0 0 12px rgba(255,212,113,0.6)}
+.bio-text.complete{color:#9bb5ff;text-shadow:0 0 12px rgba(155,181,255,0.6)}
 .bio-meter{position:absolute;bottom:0;left:0;width:100%;height:3px;background:rgba(255,255,255,0.14)}
 .bio-bar{height:100%;width:0%;background:linear-gradient(90deg,#7affc1,#ffd471);transition:width .05s ease-out}
 .bio-sub{margin-top:6px;font-size:9px;font-weight:650;letter-spacing:.14em;text-transform:uppercase;color:#d8e2df;text-shadow:0 1px 4px #000;white-space:nowrap}
+#protoModal{position:absolute;bottom:calc(var(--vpad) + 38px);left:50%;transform:translateX(-50%);width:320px;padding:18px 20px;background:#121c1df2;border-top:2px solid var(--gold);pointer-events:auto;box-shadow:0 7px 26px rgba(0,0,0,0.6);backdrop-filter:blur(8px);z-index:20}
+#protoModal[hidden]{display:none}
+#protoModal header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.proto-desc{font-size:10px;color:#a8b8b3;line-height:1.4;margin-bottom:12px}
+.proto-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;font-size:11px;color:#fff}
+.proto-row+.proto-row{border-top:1px solid #ffffff14}
+.proto-stepper{display:flex;align-items:center;gap:8px}
+.proto-btn-step{appearance:none;background:#202e2c;border:1px solid #ffffff33;color:#fff;width:28px;height:28px;border-radius:3px;cursor:pointer;font-size:15px;font-weight:700;display:grid;place-items:center;line-height:1}
+.proto-btn-step:hover{background:var(--gold);color:#121c1d;border-color:var(--gold)}
+.proto-value{font-size:13px;font-weight:750;min-width:34px;text-align:center;font-variant-numeric:tabular-nums;color:var(--gold)}
+.proto-footer{margin-top:14px;padding-top:10px;border-top:1px solid #ffffff18}
+.proto-confirm{appearance:none;width:100%;background:linear-gradient(90deg,#ffd471,#f5b942);border:0;color:#141d1c;font-weight:750;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:8px 0;border-radius:3px;cursor:pointer}
+.proto-confirm:hover{filter:brightness(1.1)}
 .controls{position:absolute;bottom:calc(var(--vpad) + 1px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:17px;white-space:nowrap;font-size:9px;letter-spacing:.05em;color:#fffc;text-shadow:0 1px 3px #1119}.controls button,#help button{appearance:none;background:none;border:0;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;padding:3px 0;cursor:pointer;pointer-events:auto;display:flex;align-items:center;gap:6px}.controls button:hover,.controls button:focus-visible{color:var(--gold)}kbd{font-family:inherit;font-weight:700;font-size:9px;display:inline-grid;place-items:center;border:1px solid #ffffff80;height:17px;min-width:17px;padding:0 3px;border-radius:3px;color:white}
 #help{position:absolute;bottom:calc(var(--vpad) + 38px);left:50%;transform:translateX(-50%);width:300px;padding:18px 20px;background:#121c1df0;border-top:2px solid var(--gold);pointer-events:auto;box-shadow:0 7px 24px #0003}#help[hidden]{display:none}#help header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.label{font-size:10px;color:var(--gold)}#help .row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:11px;color:#fff;line-height:18px}.row+.row{border-top:1px solid #ffffff16}#hint{position:absolute;left:50%;bottom:calc(var(--vpad) + 37px);transform:translateX(-50%);font-size:11px;font-weight:550;letter-spacing:.03em;color:white;text-shadow:0 1px 6px #000}#hint kbd{margin-right:4px;color:var(--gold);border-color:#ffd471ad}#help:not([hidden])~#hint{display:none}
 #load{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 30% 70%,#35433f,#141c1d 70%);color:#f6f4ec;text-align:center}.load-title{font-size:38px;font-style:italic;letter-spacing:-.07em;font-weight:750;margin:10px 0 22px}.sub{font-size:10px;color:#dfcfb0;letter-spacing:.12em;max-width:420px;line-height:1.6}.loader{height:2px;max-width:144px;margin:16px auto 0;background:#f5d27525;overflow:hidden}.loader:after{content:"";display:block;width:40%;height:100%;background:#ffd471;animation:load 1.1s infinite ease-in-out}@keyframes load{from{transform:translateX(-100%)}to{transform:translateX(350%)}}body.ready #load{display:none}
@@ -35,32 +56,69 @@ body.ready #hud{opacity:1}#hud::before{content:"";position:absolute;inset:0;back
 <div id="hud">
 <div id="brand"><svg class="symbol" viewBox="0 0 48 40" aria-hidden="true"><path d="M2 32 19 5h9L11 32ZM18 32 34 7l5 8-11 17Z" fill="#ffd471"/><path d="m33 32 9-14 5 8-4 6Z" fill="#fff"/></svg><div><div class="eyebrow">Raceway</div><div class="name">SERRA DO LUME</div></div></div>
 <div id="bioPrompt">
-  <div id="bioBanner" class="bio-banner relax">
-    <div id="bioText" class="bio-text relax">RELAX</div>
+  <div id="bioBanner" class="bio-banner work">
+    <div class="bio-header">
+      <span id="bioPhaseBadge" class="bio-badge work">WORK</span>
+      <span id="bioRepBadge" class="bio-rep">REP 1 / 10</span>
+    </div>
+    <div id="bioText" class="bio-text work">CONTRACT · 5.0s</div>
     <div class="bio-meter"><div id="bioBar" class="bio-bar"></div></div>
   </div>
-  <div id="bioSub" class="bio-sub">Auto-Drive Active · Relax on Straight</div>
+  <div id="bioSub" class="bio-sub">Hold Space/Touch to boost speed</div>
 </div>
 <div id="clock"><div><div class="field">Lap</div><div id="lap" class="lap">01</div></div><div class="divider"></div><div><div class="field">Lap Time</div><canvas id="chrono"></canvas></div></div>
 <canvas id="map" width="540" height="324" aria-label="Circuit track map"></canvas>
 <div id="vehicle"><div class="carline">Fiat &nbsp;/&nbsp; 1996</div><div class="vehicle">Uno Mille EP</div></div>
 <canvas id="dash" width="540" height="250" aria-label="Speedometer, tachometer and gear"></canvas>
 <div class="controls">
+  <button id="protoBtn"><kbd>P</kbd> <span id="protoBtnLabel">5s / 3s · 10 Reps</span></button>
   <button id="qualBtn"><kbd>Q</kbd> <span id="qualLabel">Medium</span></button>
   <button id="helpBtn" aria-expanded="false"><kbd>H</kbd> Controls</button>
   <button id="cameraBtn"><kbd>C</kbd> Camera</button>
   <button id="resetBtn"><kbd>R</kbd> Reset</button>
 </div>
+<section id="protoModal" hidden>
+  <header><span class="label">Biofeedback Protocol</span><button id="closeProto" aria-label="Close protocol settings">✕</button></header>
+  <div class="proto-desc">Configure your work contraction interval, rest recovery time, and repetition goal.</div>
+  <div class="proto-row">
+    <span>Work (Contract)</span>
+    <div class="proto-stepper">
+      <button class="proto-btn-step" data-target="work" data-delta="-1">−</button>
+      <span id="workVal" class="proto-value">5s</span>
+      <button class="proto-btn-step" data-target="work" data-delta="1">+</button>
+    </div>
+  </div>
+  <div class="proto-row">
+    <span>Rest (Relax)</span>
+    <div class="proto-stepper">
+      <button class="proto-btn-step" data-target="rest" data-delta="-1">−</button>
+      <span id="restVal" class="proto-value">3s</span>
+      <button class="proto-btn-step" data-target="rest" data-delta="1">+</button>
+    </div>
+  </div>
+  <div class="proto-row">
+    <span>Reps (Cycles)</span>
+    <div class="proto-stepper">
+      <button class="proto-btn-step" data-target="reps" data-delta="-1">−</button>
+      <span id="repsVal" class="proto-value">10</span>
+      <button class="proto-btn-step" data-target="reps" data-delta="1">+</button>
+    </div>
+  </div>
+  <div class="proto-footer">
+    <button id="startSessionBtn" class="proto-confirm">Apply & Restart Session</button>
+  </div>
+</section>
 <section id="help" hidden>
   <header><span class="label">Controls & Biofeedback</span><button id="closeHelp" aria-label="Close controls">✕</button></header>
-  <div class="row">Auto-Drive <span>Continuous guidance</span></div>
-  <div class="row">Contract (Guided Drift) <span><kbd>Space</kbd> or Hold Click</span></div>
-  <div class="row">Relax on Straights <span>Release input</span></div>
+  <div class="row">Work/Rest Protocol <span><kbd>P</kbd> Configure Intervals</span></div>
+  <div class="row">Contract (Work) <span><kbd>Space</kbd> or Hold Touch/Click</span></div>
+  <div class="row">Relax (Rest) <span>Release Input</span></div>
+  <div class="row">Auto-Drive <span>Continuous Steering Assist</span></div>
   <div class="row">Graphics Quality <span><kbd>Q</kbd></span></div>
   <div class="row">Switch Camera <span><kbd>C</kbd></span></div>
   <div class="row">Reset to Track <span><kbd>R</kbd></span></div>
 </section>
-<div id="hint"><kbd>Space</kbd> or Hold Click to Contract</div>
+<div id="hint"><kbd>Space</kbd> or Hold Touch to Contract · <kbd>P</kbd> Protocol</div>
 </div>
 <div id="load"><div><div class="eyebrow">Circuit</div><div class="load-title">Serra do Lume</div><div class="sub" id="status">Preparing circuit</div><div class="loader"></div></div></div>
 <script>

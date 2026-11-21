@@ -31,7 +31,53 @@ function cycleQuality(){
 const qualBtn=document.getElementById('qualBtn');
 if(qualBtn)qualBtn.onclick=cycleQuality;
 
-const bio={active:true,state:'RELAX',turnDirection:0,turnDiff:0,curveStrength:0,userContracting:false,contractionLevel:0,drifting:false};
+const bioConfig={workDuration:5,restDuration:3,targetReps:10};
+try{
+  const saved=JSON.parse(localStorage.getItem('race_bio_config')||'{}');
+  if(Number(saved.workDuration)>=1)bioConfig.workDuration=Math.round(Number(saved.workDuration));
+  if(Number(saved.restDuration)>=1)bioConfig.restDuration=Math.round(Number(saved.restDuration));
+  if(Number(saved.targetReps)>=1)bioConfig.targetReps=Math.round(Number(saved.targetReps));
+}catch(e){}
+
+const bioProtocol={phase:'WORK',timer:bioConfig.workDuration,currentRep:1,active:true,goodTime:0,totalTime:0,score:100,status:'Contract to Boost!'};
+function resetBioSession(){
+  bioProtocol.phase='WORK';bioProtocol.timer=bioConfig.workDuration;bioProtocol.currentRep=1;
+  bioProtocol.active=true;bioProtocol.goodTime=0;bioProtocol.totalTime=0;bioProtocol.score=100;
+  bioProtocol.status='Contract to Boost!';
+}
+
+const protoModal=document.getElementById('protoModal'),protoBtn=document.getElementById('protoBtn'),protoBtnLabel=document.getElementById('protoBtnLabel'),closeProto=document.getElementById('closeProto');
+const workVal=document.getElementById('workVal'),restVal=document.getElementById('restVal'),repsVal=document.getElementById('repsVal'),startSessionBtn=document.getElementById('startSessionBtn');
+function updateProtoSettingsUI(){
+  if(workVal)workVal.textContent=bioConfig.workDuration+'s';
+  if(restVal)restVal.textContent=bioConfig.restDuration+'s';
+  if(repsVal)repsVal.textContent=String(bioConfig.targetReps);
+  if(protoBtnLabel)protoBtnLabel.textContent=`${bioConfig.workDuration}s / ${bioConfig.restDuration}s · ${bioConfig.targetReps} Reps`;
+}
+function toggleProtoModal(){if(!protoModal)return;protoModal.hidden=!protoModal.hidden;if(!protoModal.hidden)updateProtoSettingsUI();}
+if(protoBtn)protoBtn.onclick=toggleProtoModal;
+if(closeProto)closeProto.onclick=toggleProtoModal;
+document.querySelectorAll('.proto-btn-step').forEach(btn=>{
+  btn.onclick=()=>{
+    const t=btn.dataset.target,d=Number(btn.dataset.delta)||0;
+    if(t==='work')bioConfig.workDuration=Math.max(1,Math.min(60,bioConfig.workDuration+d));
+    else if(t==='rest')bioConfig.restDuration=Math.max(1,Math.min(60,bioConfig.restDuration+d));
+    else if(t==='reps')bioConfig.targetReps=Math.max(1,Math.min(100,bioConfig.targetReps+d));
+    localStorage.setItem('race_bio_config',JSON.stringify(bioConfig));
+    updateProtoSettingsUI();
+  };
+});
+if(startSessionBtn){
+  startSessionBtn.onclick=()=>{
+    localStorage.setItem('race_bio_config',JSON.stringify(bioConfig));
+    resetBioSession();
+    updateProtoSettingsUI();
+    if(protoModal)protoModal.hidden=true;
+  };
+}
+updateProtoSettingsUI();
+
+const bio={active:true,state:'WORK',turnDirection:0,userContracting:false,contractionLevel:0,drifting:false};
 let pointerDown=false;
 window.addEventListener('pointerdown',e=>{
   if(e.target.closest('button')||e.target.closest('section'))return;
@@ -49,6 +95,7 @@ function key(e,on){
   else if(e.code==='KeyR')respawn();
   else if(e.code==='KeyH')controls();
   else if(e.code==='KeyQ')cycleQuality();
+  else if(e.code==='KeyP')toggleProtoModal();
 }
 window.addEventListener('keydown',e=>key(e,true));window.addEventListener('keyup',e=>key(e,false));window.addEventListener('blur',()=>{keys.KeyW=keys.KeyS=keys.KeyD=keys.KeyA=keys.Space=keys.ArrowUp=keys.Enter=0;pointerDown=false;});
 // The four wheels share spin and steering. Store the trigonometric pairs
@@ -198,99 +245,111 @@ function effects(dt){
     gameTime.trailDelay=0;
   }
 }
-let inCurveState=false,curveCooldown=0;
 const bioPt0=new Float64Array(6),bioPt1=new Float64Array(6),bioAim=new Float64Array(6);
 
 function computeBioStep(dt){
   bio.userContracting=checkContractionInput();
   const targetContract=bio.userContracting?1.0:0.0;
-  bio.contractionLevel+=(targetContract-bio.contractionLevel)*Math.min(1,dt*12);
+  bio.contractionLevel+=(targetContract-bio.contractionLevel)*Math.min(1,dt*14);
 
-  // Measure current road curvature
-  atRoad(driver.s,bioPt0);atRoad(driver.s+10,bioPt1);
-  const a0=Math.atan2(bioPt0[3],-bioPt0[5]),a1=Math.atan2(bioPt1[3],-bioPt1[5]);
-  const diffNow=Math.atan2(Math.sin(a1-a0),Math.cos(a1-a0)),curveNow=Math.abs(diffNow)/10;
+  // Update Biofeedback Protocol timer and scoring
+  if(bioProtocol.active && bioProtocol.phase!=='COMPLETE'){
+    bioProtocol.totalTime+=dt;
+    bioProtocol.timer-=dt;
 
-  // Immediate lookahead (8-12m ahead, roughly 0.4s reaction window)
-  const lookDist=8+Math.min(5,Math.abs(driver.speed)*.20);
-  atRoad(driver.s+lookDist,bioPt0);atRoad(driver.s+lookDist+10,bioPt1);
-  const b0=Math.atan2(bioPt0[3],-bioPt0[5]),b1=Math.atan2(bioPt1[3],-bioPt1[5]);
-  const diffAhead=Math.atan2(Math.sin(b1-b0),Math.cos(b1-b0)),curveAhead=Math.abs(diffAhead)/10;
-
-  const maxK=Math.max(curveNow,curveAhead);
-  const turnSign=(curveNow>.008?Math.sign(diffNow):Math.sign(diffAhead))||1;
-
-  // Hysteresis: only real curves (>0.0105) trigger CONTRACT.
-  // Straightaways and gentle kinks stay on RELAX.
-  if(maxK>.0105){
-    inCurveState=true;
-    curveCooldown=.35;
-    bio.turnDirection=turnSign;
-  }else if(maxK<.0068){
-    curveCooldown-=dt;
-    if(curveCooldown<=0)inCurveState=false;
-  }
-
-  bio.state=inCurveState?'CONTRACT':'RELAX';
-  bio.curveStrength=maxK;
-
-  // Smooth pure-pursuit steering along track
-  const aimDist=4.5+Math.abs(driver.speed)*.40;
-  atRoad(driver.s+aimDist,bioAim);
-
-  let targetOffset=0;
-  let steerMultiplier=1.0;
-
-  if(inCurveState){
-    if(bio.contractionLevel>=.30){
-      // CONTRACTING IN CURVE:
-      // Rail-assist guides vehicle cleanly along the inside apex
-      targetOffset=-bio.turnDirection*1.35;
-      steerMultiplier=1.30;
-      bio.drifting=true;
-      if(Math.abs(driver.speed)>12){
-        driver.slip=1;
-        hasEffects=true;
+    if(bioProtocol.phase==='WORK'){
+      const isGood=bio.contractionLevel>=.35;
+      if(isGood){
+        bioProtocol.goodTime+=dt;
+        bioProtocol.status='Holding Contraction · Turbo Boost Active!';
+      }else{
+        bioProtocol.status='CONTRACT NOW! Hold Space or Touch';
       }
-    }else{
-      // RELAXED IN CURVE:
-      // Understeers wide toward outer verge
-      targetOffset=bio.turnDirection*4.0;
-      steerMultiplier=0.22;
-      bio.drifting=false;
+
+      if(bioProtocol.timer<=0){
+        bioProtocol.phase='REST';
+        bioProtocol.timer=bioConfig.restDuration;
+      }
+    }else if(bioProtocol.phase==='REST'){
+      const isGood=bio.contractionLevel<.35;
+      if(isGood){
+        bioProtocol.goodTime+=dt;
+        bioProtocol.status='Relaxed · Smooth Cruise Recovery';
+      }else{
+        bioProtocol.status='RELAX! Release Space or Touch';
+      }
+
+      if(bioProtocol.timer<=0){
+        if(bioProtocol.currentRep>=bioConfig.targetReps){
+          bioProtocol.phase='COMPLETE';
+          bioProtocol.timer=0;
+          bioProtocol.score=bioProtocol.totalTime>0?Math.round((bioProtocol.goodTime/bioProtocol.totalTime)*100):100;
+          bioProtocol.status=`Session Complete! Accuracy: ${bioProtocol.score}%`;
+        }else{
+          bioProtocol.currentRep++;
+          bioProtocol.phase='WORK';
+          bioProtocol.timer=bioConfig.workDuration;
+        }
+      }
     }
-  }else{
-    // STRAIGHTAWAY:
-    // Glides dead-center along the track line
-    targetOffset=0;
-    steerMultiplier=1.0;
-    bio.drifting=false;
   }
 
-  const targetX=bioAim[0]-bioAim[5]*targetOffset;
-  const targetZ=bioAim[2]+bioAim[3]*targetOffset;
-  const dx=targetX-driver.x,dz=targetZ-driver.z,ld=Math.hypot(dx,dz);
-  const alpha=Math.atan2(dx,-dz)-driver.head;
+  // --- 1. ROCK-SOLID SMOOTH PURE PURSUIT STEERING ---
+  // Pure pursuit lookahead cleanly tracks the road centerline without jitter
+  const aimDist=6.0+Math.max(0,driver.speed)*.45;
+  atRoad(driver.s+aimDist,bioAim);
+  const targetX=bioAim[0],targetZ=bioAim[2];
+  const dx=targetX-driver.x,dz=targetZ-driver.z;
+  const ld=Math.hypot(dx,dz);
+  let alpha=Math.atan2(dx,-dz)-driver.head;
+  // Normalize angle to [-PI, PI] to prevent 180-deg heading flips
+  alpha=Math.atan2(Math.sin(alpha),Math.cos(alpha));
+
   const maxSteer=.565/(1+Math.abs(driver.speed)*.051);
   const baseSteer=limit(Math.atan(2*2.36*Math.sin(alpha)/Math.max(1,ld))/maxSteer,-1,1);
-  const manualNudge=(keys.KeyD-keys.KeyA)*.25;
-  const autoSteer=limit(baseSteer*steerMultiplier+manualNudge,-1,1);
+  const manualNudge=(keys.KeyD-keys.KeyA)*.20;
+  const autoSteer=limit(baseSteer+manualNudge,-1,1);
 
-  // Target speed regulation
-  let targetSpeed=26.5; // ~95 km/h on straights
-  if(inCurveState){
-    if(bio.contractionLevel>=.30)targetSpeed=21.0; // ~75 km/h apex drift
-    else targetSpeed=13.0; // understeer penalty
+  // --- 2. WORK / REST OBJECTIVE GOVERNS CAR PERFORMANCE ---
+  // Complying with WORK and REST keeps the car driving at top performance and speed
+  let targetSpeed=22.0; // standard cruising speed (~80 km/h)
+  let driftBoost=false;
+
+  if(bioProtocol.phase==='WORK'){
+    if(bio.contractionLevel>=.35){
+      targetSpeed=28.5; // ~102 km/h turbo boost
+      driftBoost=true;
+    }else{
+      targetSpeed=15.0; // ~54 km/h gentle coast penalty
+    }
+  }else if(bioProtocol.phase==='REST'){
+    if(bio.contractionLevel<.35){
+      targetSpeed=23.5; // ~85 km/h smooth cruise
+    }else{
+      targetSpeed=15.0; // ~54 km/h penalty for not relaxing
+    }
+  }else if(bioProtocol.phase==='COMPLETE'){
+    targetSpeed=22.0;
   }
 
+  // Visual drift smoke & slip when carving curves at speed
+  atRoad(driver.s,bioPt0);atRoad(driver.s+12,bioPt1);
+  const h0=Math.atan2(bioPt0[3],-bioPt0[5]),h1=Math.atan2(bioPt1[3],-bioPt1[5]);
+  const diffH=Math.abs(Math.atan2(Math.sin(h1-h0),Math.cos(h1-h0)));
+  if(diffH>.12&&driver.speed>16&&driftBoost){
+    driver.slip=1;
+    hasEffects=true;
+  }
+
+  // Smooth throttle and braking control
   const speedDiff=targetSpeed-driver.speed;
   let autoGas=0,autoBrake=0;
-  if(speedDiff>.3){
-    autoGas=Math.min(1.0,.35+speedDiff*.35);
+  if(speedDiff>.4){
+    autoGas=Math.min(1.0,.40+speedDiff*.35);
   }else if(speedDiff<-1.5){
-    autoBrake=Math.min(.85,-speedDiff*.30);
+    autoBrake=Math.min(.70,-speedDiff*.25);
   }else{
-    autoGas=.25;
+    autoGas=.30;
   }
 
   return {gas:autoGas,brk:autoBrake,steer:autoSteer};
@@ -311,21 +370,32 @@ function advance(gas,brk,steer,hand,dt){
 }
 
 const bioBanner=document.getElementById('bioBanner'),bioText=document.getElementById('bioText'),bioBar=document.getElementById('bioBar'),bioSub=document.getElementById('bioSub');
+const bioPhaseBadge=document.getElementById('bioPhaseBadge'),bioRepBadge=document.getElementById('bioRepBadge');
 function updateBioHUD(){
   if(!bioBanner||!bioText||!bioBar)return;
-  if(bio.state==='CONTRACT'){
-    const arrow=bio.turnDirection<0?'⮠ ':'';
-    const arrowRight=bio.turnDirection>0?' ➔':'';
-    bioText.textContent=arrow+'CONTRACT'+arrowRight;
-    bioText.className='bio-text contract';
-    bioBanner.className='bio-banner contract';
-    if(bioSub)bioSub.textContent=bio.contractionLevel>=.35?'Perfect Drift · Contraction Active':'Curve Ahead · Contract to Drift!';
+  const timerSec=Math.max(0,bioProtocol.timer).toFixed(1);
+
+  if(bioProtocol.phase==='WORK'){
+    if(bioPhaseBadge){bioPhaseBadge.textContent='WORK';bioPhaseBadge.className='bio-badge work';}
+    if(bioRepBadge)bioRepBadge.textContent=`REP ${bioProtocol.currentRep} / ${bioConfig.targetReps}`;
+    bioText.textContent=`CONTRACT · ${timerSec}s`;
+    bioText.className='bio-text work';
+    bioBanner.className='bio-banner work';
+  }else if(bioProtocol.phase==='REST'){
+    if(bioPhaseBadge){bioPhaseBadge.textContent='REST';bioPhaseBadge.className='bio-badge rest';}
+    if(bioRepBadge)bioRepBadge.textContent=`REP ${bioProtocol.currentRep} / ${bioConfig.targetReps}`;
+    bioText.textContent=`RELAX · ${timerSec}s`;
+    bioText.className='bio-text rest';
+    bioBanner.className='bio-banner rest';
   }else{
-    bioText.textContent='RELAX';
-    bioText.className='bio-text relax';
-    bioBanner.className='bio-banner relax';
-    if(bioSub)bioSub.textContent=bio.contractionLevel>.4?'Straightaway Ahead · Relax Your Muscles':'Auto-Drive Active · Relax on Straight';
+    if(bioPhaseBadge){bioPhaseBadge.textContent='DONE';bioPhaseBadge.className='bio-badge complete';}
+    if(bioRepBadge)bioRepBadge.textContent=`${bioConfig.targetReps} / ${bioConfig.targetReps} REPS`;
+    bioText.textContent=`COMPLETE · ${bioProtocol.score}%`;
+    bioText.className='bio-text complete';
+    bioBanner.className='bio-banner complete';
   }
+
+  if(bioSub)bioSub.textContent=bioProtocol.status;
   bioBar.style.width=(Math.max(0,Math.min(1,bio.contractionLevel))*100).toFixed(1)+'%';
 }
 
