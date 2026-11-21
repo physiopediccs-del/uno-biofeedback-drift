@@ -77,6 +77,28 @@ if(startSessionBtn){
 }
 updateProtoSettingsUI();
 
+function toggleMute(){
+  if(typeof sndMute==='function')sndMute(!SND.mute);
+  const lbl=document.getElementById('muteLabel');
+  if(lbl)lbl.textContent=SND.mute?'Sound: Off':'Sound: On';
+}
+const muteBtn=document.getElementById('muteBtn');
+if(muteBtn)muteBtn.onclick=toggleMute;
+
+function ensureAudio(){
+  if(typeof sndStart==='function'){
+    if(!SND.ctx){
+      sndStart();
+      sndRun(true);
+    }else if(SND.ctx.state==='suspended'){
+      SND.ctx.resume();
+      sndRun(true);
+    }
+  }
+}
+window.addEventListener('pointerdown',ensureAudio,{passive:true});
+window.addEventListener('keydown',ensureAudio,{passive:true});
+
 const bio={active:true,state:'WORK',turnDirection:0,userContracting:false,contractionLevel:0,drifting:false};
 let pointerDown=false;
 window.addEventListener('pointerdown',e=>{
@@ -96,6 +118,7 @@ function key(e,on){
   else if(e.code==='KeyH')controls();
   else if(e.code==='KeyQ')cycleQuality();
   else if(e.code==='KeyP')toggleProtoModal();
+  else if(e.code==='KeyM')toggleMute();
 }
 window.addEventListener('keydown',e=>key(e,true));window.addEventListener('keyup',e=>key(e,false));window.addEventListener('blur',()=>{keys.KeyW=keys.KeyS=keys.KeyD=keys.KeyA=keys.Space=keys.ArrowUp=keys.Enter=0;pointerDown=false;});
 // The four wheels share spin and steering. Store the trigonometric pairs
@@ -269,6 +292,7 @@ function computeBioStep(dt){
       if(bioProtocol.timer<=0){
         bioProtocol.phase='REST';
         bioProtocol.timer=bioConfig.restDuration;
+        if(typeof playBioChime==='function')playBioChime('rest');
       }
     }else if(bioProtocol.phase==='REST'){
       const isGood=bio.contractionLevel<.35;
@@ -285,10 +309,12 @@ function computeBioStep(dt){
           bioProtocol.timer=0;
           bioProtocol.score=bioProtocol.totalTime>0?Math.round((bioProtocol.goodTime/bioProtocol.totalTime)*100):100;
           bioProtocol.status=`Session Complete! Accuracy: ${bioProtocol.score}%`;
+          if(typeof playBioChime==='function')playBioChime('complete');
         }else{
           bioProtocol.currentRep++;
           bioProtocol.phase='WORK';
           bioProtocol.timer=bioConfig.workDuration;
+          if(typeof playBioChime==='function')playBioChime('work');
         }
       }
     }
@@ -403,6 +429,7 @@ function paint(dt,sample=-1,d=driver){
   frame.prevVP.set(frame.vp);visualCar(d);chooseCamera(dt,d);if(camCut)frame.prevVP.set(frame.vp);invert(frame.invVP,frame.vp);
   frame.time=gameTime.elapsed;frame.dt=dt;frame.s=d.s;frame.speed=d.speed;frame.brake=d.brake;frame.cut=camCut;frame.sample=sample;
   renderer.draw(frame);camCut=false;
+  if(typeof sndFrame==='function'&&SND.ok)sndFrame();
   if(gameTime.elapsed-gameTime.lastHUD>=1/30-.0001||gameTime.lastHUD<0){
     hudDraw(driver,lapNo,gameTime);
     updateBioHUD();
