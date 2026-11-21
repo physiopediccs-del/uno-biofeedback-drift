@@ -198,96 +198,110 @@ function effects(dt){
     gameTime.trailDelay=0;
   }
 }
+let inCurveState=false,curveCooldown=0;
 const bioPt0=new Float64Array(6),bioPt1=new Float64Array(6),bioAim=new Float64Array(6);
+
 function computeBioStep(dt){
   bio.userContracting=checkContractionInput();
   const targetContract=bio.userContracting?1.0:0.0;
-  bio.contractionLevel+=(targetContract-bio.contractionLevel)*Math.min(1,dt*14);
+  bio.contractionLevel+=(targetContract-bio.contractionLevel)*Math.min(1,dt*12);
+
+  // Measure current road curvature
   atRoad(driver.s,bioPt0);atRoad(driver.s+10,bioPt1);
   const a0=Math.atan2(bioPt0[3],-bioPt0[5]),a1=Math.atan2(bioPt1[3],-bioPt1[5]);
   const diffNow=Math.atan2(Math.sin(a1-a0),Math.cos(a1-a0)),curveNow=Math.abs(diffNow)/10;
-  const lookDist=15+Math.min(12,Math.abs(driver.speed)*.42);
-  atRoad(driver.s+lookDist,bioPt0);atRoad(driver.s+lookDist+12,bioPt1);
+
+  // Immediate lookahead (8-12m ahead, roughly 0.4s reaction window)
+  const lookDist=8+Math.min(5,Math.abs(driver.speed)*.20);
+  atRoad(driver.s+lookDist,bioPt0);atRoad(driver.s+lookDist+10,bioPt1);
   const b0=Math.atan2(bioPt0[3],-bioPt0[5]),b1=Math.atan2(bioPt1[3],-bioPt1[5]);
-  const diffAhead=Math.atan2(Math.sin(b1-b0),Math.cos(b1-b0)),curveAhead=Math.abs(diffAhead)/12;
-  const CURVE_THRESHOLD=.0062;
-  const inCurve=curveNow>CURVE_THRESHOLD,approaching=curveAhead>CURVE_THRESHOLD;
-  const isCurve=inCurve||approaching;
-  if(isCurve){
-    bio.state='CONTRACT';
-    const sign=inCurve?Math.sign(diffNow):Math.sign(diffAhead);
-    bio.turnDirection=sign||1;bio.curveStrength=Math.max(curveNow,curveAhead);bio.turnDiff=inCurve?diffNow:diffAhead;
+  const diffAhead=Math.atan2(Math.sin(b1-b0),Math.cos(b1-b0)),curveAhead=Math.abs(diffAhead)/10;
+
+  const maxK=Math.max(curveNow,curveAhead);
+  const turnSign=(curveNow>.008?Math.sign(diffNow):Math.sign(diffAhead))||1;
+
+  // Hysteresis: only real curves (>0.0105) trigger CONTRACT.
+  // Straightaways and gentle kinks stay on RELAX.
+  if(maxK>.0105){
+    inCurveState=true;
+    curveCooldown=.35;
+    bio.turnDirection=turnSign;
+  }else if(maxK<.0068){
+    curveCooldown-=dt;
+    if(curveCooldown<=0)inCurveState=false;
+  }
+
+  bio.state=inCurveState?'CONTRACT':'RELAX';
+  bio.curveStrength=maxK;
+
+  // Smooth pure-pursuit steering along track
+  const aimDist=4.5+Math.abs(driver.speed)*.40;
+  atRoad(driver.s+aimDist,bioAim);
+
+  let targetOffset=0;
+  let steerMultiplier=1.0;
+
+  if(inCurveState){
+    if(bio.contractionLevel>=.30){
+      // CONTRACTING IN CURVE:
+      // Rail-assist guides vehicle cleanly along the inside apex
+      targetOffset=-bio.turnDirection*1.35;
+      steerMultiplier=1.30;
+      bio.drifting=true;
+      if(Math.abs(driver.speed)>12){
+        driver.slip=1;
+        hasEffects=true;
+      }
+    }else{
+      // RELAXED IN CURVE:
+      // Understeers wide toward outer verge
+      targetOffset=bio.turnDirection*4.0;
+      steerMultiplier=0.22;
+      bio.drifting=false;
+    }
   }else{
-    bio.state='RELAX';bio.turnDirection=0;bio.curveStrength=0;bio.turnDiff=0;
+    // STRAIGHTAWAY:
+    // Glides dead-center along the track line
+    targetOffset=0;
+    steerMultiplier=1.0;
+    bio.drifting=false;
   }
-  let targetSpeed=26.5;
-  if(isCurve){
-    if(bio.contractionLevel>=.35)targetSpeed=21.0;
-    else targetSpeed=13.0;
+
+  const targetX=bioAim[0]-bioAim[5]*targetOffset;
+  const targetZ=bioAim[2]+bioAim[3]*targetOffset;
+  const dx=targetX-driver.x,dz=targetZ-driver.z,ld=Math.hypot(dx,dz);
+  const alpha=Math.atan2(dx,-dz)-driver.head;
+  const maxSteer=.565/(1+Math.abs(driver.speed)*.051);
+  const baseSteer=limit(Math.atan(2*2.36*Math.sin(alpha)/Math.max(1,ld))/maxSteer,-1,1);
+  const manualNudge=(keys.KeyD-keys.KeyA)*.25;
+  const autoSteer=limit(baseSteer*steerMultiplier+manualNudge,-1,1);
+
+  // Target speed regulation
+  let targetSpeed=26.5; // ~95 km/h on straights
+  if(inCurveState){
+    if(bio.contractionLevel>=.30)targetSpeed=21.0; // ~75 km/h apex drift
+    else targetSpeed=13.0; // understeer penalty
   }
+
   const speedDiff=targetSpeed-driver.speed;
   let autoGas=0,autoBrake=0;
-  if(speedDiff>.2)autoGas=Math.min(1.0,.40+speedDiff*.38);
-  else if(speedDiff<-1.5)autoBrake=Math.min(.85,-speedDiff*.32);
-  else autoGas=.25;
-  
-  let baseSteer=0;
-  if(!isCurve||bio.contractionLevel<.35){
-    baseSteer=isCurve?bio.turnDirection*.18:0;
+  if(speedDiff>.3){
+    autoGas=Math.min(1.0,.35+speedDiff*.35);
+  }else if(speedDiff<-1.5){
+    autoBrake=Math.min(.85,-speedDiff*.30);
+  }else{
+    autoGas=.25;
   }
-  return {gas:autoGas,brk:autoBrake,steer:baseSteer,isCurve};
+
+  return {gas:autoGas,brk:autoBrake,steer:autoSteer};
 }
 
 function advance(gas,brk,steer,hand,dt){
-  let isCurve=false;
   if(!testMode){
     const ctrl=computeBioStep(dt);
     gas=ctrl.gas;brk=ctrl.brk;steer=ctrl.steer;hand=0;
-    isCurve=ctrl.isCurve;
   }
   step(driver,gas,brk,steer,hand,dt);
-  
-  if(!testMode){
-    // Rock-Solid Game Assist (No floppiness, pure precision apex lock)
-    if(isCurve&&bio.contractionLevel>=.35){
-      // Contracted in curve: rail-assisted drift along the inside apex
-      const targetOffset=-bio.turnDirection*1.35;
-      const offsetErr=targetOffset-driver.offset;
-      atRoad(driver.s,bioPt0);
-      const roadHead=Math.atan2(bioPt0[3],-bioPt0[5]);
-      const desiredTravel=roadHead+limit(offsetErr*.16,-.32,.32);
-      const tDiff=Math.atan2(Math.sin(desiredTravel-driver.travel),Math.cos(desiredTravel-driver.travel));
-      driver.travel+=tDiff*Math.min(1,dt*12);
-      
-      const desiredHead=driver.travel+bio.turnDirection*.22;
-      const hDiff=Math.atan2(Math.sin(desiredHead-driver.head),Math.cos(desiredHead-driver.head));
-      driver.head+=hDiff*Math.min(1,dt*10);
-      driver.yawRate=bio.turnDirection*.4;
-      driver.steering=-bio.turnDirection*.4;
-      driver.slip=1;
-      hasEffects=true;
-      bio.drifting=true;
-    }else if(!isCurve){
-      // Straight: Dead-center road tracking, critically damped, zero wobble
-      atRoad(driver.s,bioPt0);
-      const roadHead=Math.atan2(bioPt0[3],-bioPt0[5]);
-      const offsetErr=-driver.offset;
-      const desiredTravel=roadHead+limit(offsetErr*.20,-.25,.25);
-      const tDiff=Math.atan2(Math.sin(desiredTravel-driver.travel),Math.cos(desiredTravel-driver.travel));
-      driver.travel+=tDiff*Math.min(1,dt*14);
-      
-      const hDiff=Math.atan2(Math.sin(driver.travel-driver.head),Math.cos(driver.travel-driver.head));
-      driver.head+=hDiff*Math.min(1,dt*12);
-      driver.yawRate*=.8;
-      driver.steering*=.8;
-      driver.slip=0;
-      bio.drifting=false;
-    }else{
-      // Curve but NOT contracted: slides wide toward outer boundary
-      bio.drifting=false;
-    }
-  }
-  
   effects(dt);gameTime.elapsed+=dt;
   if(gas||Math.abs(driver.speed)>.2)driving=true;
   if(driving)gameTime.lapTime+=dt;
