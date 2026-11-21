@@ -417,7 +417,7 @@ async function start(){
   gameCanvas.height=testMode&&Number(mode.get('h'))||dims.h;
   prepareRoad();buildWorld();buildCar();const scene=G.finish();bakeCarOcclusion(scene);renderer=await initRenderer(gameCanvas,scene);
   driver=spawnDriver();place(driver,18);driver.distance=0;snapshot();ident(matrices[0]);hudDraw=makeHUD();
-  for(let i=0;i<12;i++)paint(1/60);
+  for(let i=0;i<2;i++)paint(1/60);
   await renderer.device.queue.onSubmittedWorkDone();document.body.classList.add('ready');
   if(testMode)window.lab={
     reset:replayReset,step:replayStep,state:debugState,device:renderer.device,

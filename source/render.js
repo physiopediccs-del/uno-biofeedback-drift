@@ -77,10 +77,10 @@ fn density(p:vec3f)->f32 {
  let zen=vec3f(.039,.175,.485);let horizon=mix(vec3f(.49,.65,.90),vec3f(2.21,1.10,.36),pow(mu,3.));
  var col=mix(horizon,zen,pow(clamp(h/.83,0.,1.),.39))+vec3f(1.42,.64,.16)*pow(mu,26.)*.49+vec3f(1.7,1.18,.53)*pow(mu,290.)*.55;
  if(d.y>.014){
-   let start=905./max(d.y,.024);let stepSize=690./max(d.y,.045)/52.;
+   let start=905./max(d.y,.024);let stepSize=690./max(d.y,.045)/16.;
    var trans=1.;var scatter=vec3f(0.);
    let rayPhase=.5+.19*sin(phi*499.+d.y*537.)+.11*sin(phi*627.-d.y*611.);
-   for(var j=0;j<52;j++){
+   for(var j=0;j<16;j++){
      let p=d*(start+(f32(j)+rayPhase)*stepSize);let den=density(p);
      if(den>.003){
        let depth=.32*density(p+sun*28.)+.66*density(p+sun*83.)+.97*density(p+sun*188.)+.83*density(p+sun*391.);
@@ -157,7 +157,7 @@ fn vert(v:Vertex,passId:i32)->Vary { let s=sin(v.posYaw.w);let c=cos(v.posYaw.w)
  return g.nearSun*vec4f(wp.xyz,1.);
 }
 `;
-const reflectionProbeCount=16,reflectionProbeSize=320;
+const reflectionProbeCount=6,reflectionProbeSize=160;
 const reflectionSites=Array.from({length:reflectionProbeCount},(_,i)=>{
   const p=trackSample(TRACK_LENGTH*i/reflectionProbeCount,new Float32Array(6));
   return 'vec3f('+p[0].toFixed(5)+','+(p[1]+1.15).toFixed(5)+','+p[2].toFixed(5)+')';
@@ -1243,7 +1243,7 @@ async function initRenderer(canvas,scene){
  const target=(size,fmt,ex=0)=>device.createTexture({size,format:fmt,usage:TU.RENDER_ATTACHMENT|TU.TEXTURE_BINDING|ex});const tex=(w,h,f)=>target([w,h],f).createView();const buffer=(arr,use)=>{const b=device.createBuffer({size:Math.max(4,arr.byteLength),usage:use,mappedAtCreation:true});new Float32Array(b.getMappedRange()).set(arr);b.unmap();return b};
  const visibility=typeof visibleScene==='function'?visibleScene(device,scene):null;const vertex=visibility?null:buffer(packSceneVertices(scene.vertices,scene.vertices.length/13),BU.VERTEX),instances=visibility?null:buffer(scene.instances,BU.VERTEX);const U=new Float32Array(404),prior=new Float32Array(96);const uniform=device.createBuffer({size:U.byteLength,usage:BU.UNIFORM|BU.COPY_DST});const effects=device.createBuffer({size:roadEffectsCount*32,usage:BU.STORAGE|BU.COPY_DST});
  const sam=device.createSampler({addressModeU:'repeat',addressModeV:'repeat',magFilter:'linear',minFilter:'linear',mipmapFilter:'linear',maxAnisotropy:4});const iso=device.createSampler({addressModeU:'repeat',addressModeV:'repeat',magFilter:'linear',minFilter:'linear',mipmapFilter:'linear'});const postS=device.createSampler({magFilter:'linear',minFilter:'linear'});const shadowS=device.createSampler({compare:'less-equal',minFilter:'linear',magFilter:'linear'});
- const trackWater=tireWaterTexture(device),aggregateView=createAggregateMap(device);const maps=rendererTiles(device),woodland=createWoodlandMaps(device),forestSky=typeof createForestIrradiance==='function'?createForestIrradiance(device,scene):maps.grain,canopyAtlas=typeof worldCanopyAtlas==='function'?worldCanopyAtlas(device):maps.leaves,verge=typeof worldVergeTile==='function'?worldVergeTile(device):maps.grain,asphaltHistory=typeof createPavementMap==='function'?createPavementMap(device):maps.grain,wide=tex(wideShadowSize,wideShadowSize,'depth32float'),near=tex(nearShadowSize,nearShadowSize,'depth32float'),pan=tex(4096,2048,'rgba16float');const probeCount=reflectionProbeCount,probeTex=device.createTexture({size:[reflectionProbeSize,reflectionProbeSize,probeCount*6],mipLevelCount:6,format:'rgba16float',usage:TU.RENDER_ATTACHMENT|TU.TEXTURE_BINDING});const probeView=probeTex.createView({dimension:'cube-array'});const probeDummy=target([1,1,6],'rgba16float').createView({dimension:'cube-array'});const depDummy=tex(1,1,'depth32float');const probeDepth=tex(reflectionProbeSize,reflectionProbeSize,'depth32float');
+ const trackWater=tireWaterTexture(device),aggregateView=createAggregateMap(device);const maps=rendererTiles(device),woodland=createWoodlandMaps(device),forestSky=typeof createForestIrradiance==='function'?createForestIrradiance(device,scene):maps.grain,canopyAtlas=typeof worldCanopyAtlas==='function'?worldCanopyAtlas(device):maps.leaves,verge=typeof worldVergeTile==='function'?worldVergeTile(device):maps.grain,asphaltHistory=typeof createPavementMap==='function'?createPavementMap(device):maps.grain;const panW=gq==='low'?512:gq==='high'?1024:768,panH=gq==='low'?256:gq==='high'?512:384;const wide=tex(wideShadowSize,wideShadowSize,'depth32float'),near=tex(nearShadowSize,nearShadowSize,'depth32float'),pan=tex(panW,panH,'rgba16float');const probeCount=reflectionProbeCount,probeTex=device.createTexture({size:[reflectionProbeSize,reflectionProbeSize,probeCount*6],mipLevelCount:6,format:'rgba16float',usage:TU.RENDER_ATTACHMENT|TU.TEXTURE_BINDING});const probeView=probeTex.createView({dimension:'cube-array'});const probeDummy=target([1,1,6],'rgba16float').createView({dimension:'cube-array'});const depDummy=tex(1,1,'depth32float');const probeDepth=tex(reflectionProbeSize,reflectionProbeSize,'depth32float');
  const mirrorScale=gq==='low'?6:3,mirrorWidth=Math.max(1,Math.ceil(W/mirrorScale)),mirrorHeight=Math.max(1,Math.ceil(H/mirrorScale));
  const mirrorView=tex(mirrorWidth,mirrorHeight,'rgba16float'),mirrorDepth=tex(mirrorWidth,mirrorHeight,'depth32float');
  const mirrorUniform=device.createBuffer({size:U.byteLength,usage:BU.UNIFORM|BU.COPY_DST});
@@ -1416,16 +1416,16 @@ async function initRenderer(canvas,scene){
  const cx=.5*(maxX+minX),cz=.5*(maxZ+minZ),extent=Math.max(90,Math.hypot(maxZ-minZ,maxX-minX)*.50+38);renderSunMatrix(U,48,cx,baseY,cz,extent,extent*3.);renderSunMatrix(U,64,0,0,0,4.0,12.);U[284]=W;U[285]=H;U[286]=1/W;U[287]=1/H;queue.writeBuffer(uniform,0,U);
  const cloudVolume=cloudMicrostructure(device),cloudS=device.createSampler({addressModeU:"repeat",addressModeV:"repeat",addressModeW:"repeat",magFilter:"linear",minFilter:"linear"});
  const cloudGroup=group(skyPipe.getBindGroupLayout(0),[cloudS,cloudVolume.createView()]);
- const bake= device.createCommandEncoder();let bakePass=bake.beginRenderPass(pass([pan]));bakePass.setPipeline(skyPipe);bakePass.setBindGroup(0,cloudGroup);bakePass.draw(3);bakePass.end();exec(bake,wideP,wideB);queue.submit([bake.finish()]);cloudVolume.destroy();
+ const bake=device.createCommandEncoder();let bakePass=bake.beginRenderPass(pass([pan]));bakePass.setPipeline(skyPipe);bakePass.setBindGroup(0,cloudGroup);bakePass.draw(3);bakePass.end();queue.submit([bake.finish()]);cloudVolume.destroy();await device.queue.onSubmittedWorkDone();const shadowBake=device.createCommandEncoder();exec(shadowBake,wideP,wideB);queue.submit([shadowBake.finish()]);await device.queue.onSubmittedWorkDone();
  if(typeof trackSample==='function')trackSample(0,tr);const probePos=[tr[0],tr[1]+1.03,tr[2]];const faces=[[1,0,0],[ -1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]],ups=[[0,1,0],[0,1,0],[0,0,-1],[0,0,1],[0,1,0],[0,1,0]];
  for(let probeId=0;probeId<probeCount;probeId++){if(typeof trackSample==='function')trackSample(probeId*TRACK_LENGTH/probeCount,tr);probePos[0]=tr[0];probePos[1]=tr[1]+1.15;probePos[2]=tr[2];
  const probeEnc=device.createCommandEncoder();for(let face=0;face<6;face++){const pu=U.slice(),dir=faces[face],up=ups[face],right=[dir[1]*up[2]-dir[2]*up[1],dir[2]*up[0]-dir[0]*up[2],dir[0]*up[1]-dir[1]*up[0]];for(let j=0;j<3;j++)right[j]*=-1;const pos=probePos;const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];const nearZ=.15,farZ=1500,A=farZ/(farZ-nearZ),B=-nearZ*A;for(let j=0;j<3;j++){pu[j*4]=right[j];pu[j*4+1]=up[j];pu[j*4+2]=dir[j]*A;pu[j*4+3]=dir[j];}pu[12]=-dot(right,pos);pu[13]=-dot(up,pos);pu[14]=B-A*dot(dir,pos);pu[15]=-dot(dir,pos);
  // Inverse projection lifts NDC coordinates into a ray for the environment pass.
  for(let j=0;j<3;j++){pu[32+j]=right[j];pu[36+j]=up[j];pu[40+j]=pos[j]/B;pu[44+j]=dir[j]-A*pos[j]/B;}pu[35]=0;pu[39]=0;pu[43]=1/B;pu[47]=-A/B;pu.set(pos,272);pu[284]=pu[285]=reflectionProbeSize;pu[286]=pu[287]=1/reflectionProbeSize;
- const pb=buffer(pu,BU.UNIFORM);const bg=bindings(pb,wide,depDummy,probeDummy);const faceView=probeTex.createView({dimension:'2d',baseArrayLayer:face+6*probeId,arrayLayerCount:1,mipLevelCount:1});const p=probeEnc.beginRenderPass(pass([faceView],probeDepth));p.setBindGroup(0,bg);p.setPipeline(prBg);p.draw(3);p.setPipeline(prPipe);drawGeo(p,s=>!s.car&&(!s.transparent||s.fence));p.end();}queue.submit([probeEnc.finish()]);}
+ const pb=buffer(pu,BU.UNIFORM);const bg=bindings(pb,wide,depDummy,probeDummy);const faceView=probeTex.createView({dimension:'2d',baseArrayLayer:face+6*probeId,arrayLayerCount:1,mipLevelCount:1});const p=probeEnc.beginRenderPass(pass([faceView],probeDepth));p.setBindGroup(0,bg);p.setPipeline(prBg);p.draw(3);p.setPipeline(prPipe);drawGeo(p,s=>!s.car&&(!s.transparent||s.fence));p.end();}queue.submit([probeEnc.finish()]);await device.queue.onSubmittedWorkDone();}
  // Linear radiance downsampling supplies the roughness-dependent reflection lobe.
- const mipMod=shader('filtragem especular',renderCommon+`@group(0) @binding(0) var mipSampler:sampler;@group(0) @binding(1) var sourceMip:texture_2d<f32>;@fragment fn reduce(i:Full)->@location(0) vec4f {let du=1./vec2f(textureDimensions(sourceMip));var c=vec4f(0.);for(var y=0;y<3;y++){for(var x=0;x<3;x++){let off=vec2f(f32(x)-1.,f32(y)-1.)*du*.85;let wt=select(1.,2.,x==1)*select(1.,2.,y==1);c+=textureSampleLevel(sourceMip,mipSampler,i.uv+off,0.)*wt;}}return c*.0625;}`);const mipPipe=await pipeline('convolução angular',mipMod,'auto','full','reduce',one,false,false,false);const mipLayout=mipPipe.getBindGroupLayout(0),mipEnc=device.createCommandEncoder();
- for(let level=1;level<6;level++){for(let layer=0;layer<probeCount*6;layer++){const mipView=(m)=>probeTex.createView({dimension:'2d',baseArrayLayer:layer,arrayLayerCount:1,baseMipLevel:m,mipLevelCount:1});const p=mipEnc.beginRenderPass(pass([mipView(level)]));p.setPipeline(mipPipe);p.setBindGroup(0,group(mipLayout,[postS,mipView(level-1)]));p.draw(3);p.end();}}queue.submit([mipEnc.finish()]);
+ const mipMod=shader('Specular filtering',renderCommon+`@group(0) @binding(0) var mipSampler:sampler;@group(0) @binding(1) var sourceMip:texture_2d<f32>;@fragment fn reduce(i:Full)->@location(0) vec4f {let du=1./vec2f(textureDimensions(sourceMip));var c=vec4f(0.);for(var y=0;y<3;y++){for(var x=0;x<3;x++){let off=vec2f(f32(x)-1.,f32(y)-1.)*du*.85;let wt=select(1.,2.,x==1)*select(1.,2.,y==1);c+=textureSampleLevel(sourceMip,mipSampler,i.uv+off,0.)*wt;}}return c*.0625;}`);const mipPipe=await pipeline('Angular convolution',mipMod,'auto','full','reduce',one,false,false,false);const mipLayout=mipPipe.getBindGroupLayout(0);
+ for(let level=1;level<6;level++){const mipEnc=device.createCommandEncoder();for(let layer=0;layer<probeCount*6;layer++){const mipView=(m)=>probeTex.createView({dimension:'2d',baseArrayLayer:layer,arrayLayerCount:1,baseMipLevel:m,mipLevelCount:1});const p=mipEnc.beginRenderPass(pass([mipView(level)]));p.setPipeline(mipPipe);p.setBindGroup(0,group(mipLayout,[postS,mipView(level-1)]));p.draw(3);p.end();}queue.submit([mipEnc.finish()]);}await device.queue.onSubmittedWorkDone();
  const mirrorU=new Float32Array(U.length),reflectM=new Float32Array(16);
  const mirrorVP=mirrorU.subarray(0,16),mirrorInverse=mirrorU.subarray(32,48);
  function updateMirror(frame){
@@ -1469,8 +1469,8 @@ async function initRenderer(canvas,scene){
  // Reserve a unique pair of timestamp slots for every measured frame.
  // Resolve after the lap, so no measured frame waits on reuse of a counter pair.
  function startTiming(count){
-   if(!canTime)throw Error('Consultas timestamp-query indisponíveis.');
-   if(timingSets || !Number.isInteger(count) || count<1)throw Error('Amostragem de GPU inválida.');
+   if(!canTime)throw Error('Timestamp queries unavailable.');
+   if(timingSets || !Number.isInteger(count) || count<1)throw Error('Invalid GPU sampling.');
    sampleCount=count;timingSets=[];
    for(let begin=0;begin<count;begin+=1024){
      timingSets.push(device.createQuerySet({type:'timestamp',count:2*Math.min(1024,count-begin)}));
