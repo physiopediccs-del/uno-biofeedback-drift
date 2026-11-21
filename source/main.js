@@ -292,7 +292,6 @@ function computeBioStep(dt){
       if(bioProtocol.timer<=0){
         bioProtocol.phase='REST';
         bioProtocol.timer=bioConfig.restDuration;
-        if(typeof playBioChime==='function')playBioChime('rest');
       }
     }else if(bioProtocol.phase==='REST'){
       const isGood=bio.contractionLevel<.35;
@@ -309,12 +308,10 @@ function computeBioStep(dt){
           bioProtocol.timer=0;
           bioProtocol.score=bioProtocol.totalTime>0?Math.round((bioProtocol.goodTime/bioProtocol.totalTime)*100):100;
           bioProtocol.status=`Session Complete! Accuracy: ${bioProtocol.score}%`;
-          if(typeof playBioChime==='function')playBioChime('complete');
         }else{
           bioProtocol.currentRep++;
           bioProtocol.phase='WORK';
           bioProtocol.timer=bioConfig.workDuration;
-          if(typeof playBioChime==='function')playBioChime('work');
         }
       }
     }

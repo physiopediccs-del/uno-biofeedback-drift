@@ -212,6 +212,17 @@ function sndControl() {
     else throttle = 0.35;
   }
 
+  const trackLen = typeof TRACK_LENGTH === 'number' ? TRACK_LENGTH : 860;
+  const sPos = ((d.s % trackLen) + trackLen) % trackLen;
+  const distToStart = Math.min(sPos, trackLen - sPos);
+  const crowdProx = distToStart < 68 ? Math.max(0, 1 - distToStart / 68) : 0;
+  let dop = 10000, lsp = sp;
+  if (view === 2) {
+    const vr = -d.speed * 0.85;
+    dop = Math.round((343 / Math.max(10, 343 - vr)) * 10000);
+    lsp = 0;
+  }
+
   c[0] = (SND.run ? 1 : 0) | (SND.mute ? 2 : 0) | (view << 2);
   c[1] = Math.round(d.rpm || 950);
   c[2] = Math.round(throttle * 1000);
@@ -222,61 +233,13 @@ function sndControl() {
   c[7] = Math.round((grass ? 1 : 0) * (sp < 12 ? sp / 12 : 1) * 1000);
   c[8] = Math.round((kerb ? 1 : 0) * (sp < 12 ? sp / 12 : 1) * 1000);
   c[9] = Math.round(dist * 10);
-  c[10] = 10000;
-  c[11] = Math.round(sp * 100);
-  c[12] = 0;
-  c[13] = 0;
+  c[10] = dop;
+  c[11] = Math.round(lsp * 100);
+  c[12] = Math.round(crowdProx * 1000);
+  c[13] = -450;
   c[14] = 0;
 }
 
-function playBioChime(type) {
-  if (!SND.ctx || SND.mute) return;
-  try {
-    const ctx = SND.ctx;
-    if (ctx.state === 'suspended') ctx.resume();
-    const now = ctx.currentTime;
-    if (type === 'work') {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(440, now);
-      osc.frequency.exponentialRampToValueAtTime(660, now + 0.14);
-      gain.gain.setValueAtTime(0.18, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.38);
-    } else if (type === 'rest') {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(520, now);
-      osc.frequency.exponentialRampToValueAtTime(330, now + 0.18);
-      gain.gain.setValueAtTime(0.15, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.42);
-    } else if (type === 'complete') {
-      [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, now + idx * 0.09);
-        gain.gain.setValueAtTime(0, now);
-        gain.gain.setValueAtTime(0.12, now + idx * 0.09);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.6);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now + idx * 0.09);
-        osc.stop(now + idx * 0.09 + 0.6);
-      });
-    }
-  } catch(e) {}
-}
-// O contexto de áudio só pode nascer num gesto do usuário: é chamado no clique de "Começar".
 function sndStart() {
   if (SND.ctx) return; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
   const ctx = SND.ctx = new AC({ latencyHint: 'interactive' });
